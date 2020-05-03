@@ -1,4 +1,4 @@
-import "DPI-C" function void trigger(output logic a);
+import "DPI-C" function void trigger(input logic clki, output logic a);
 
 /* verilator lint_off UNUSED */
 /* verilator lint_off UNDRIVEN */
@@ -53,12 +53,10 @@ module SB_SPI (
 	output MCSNOE0
 );
    parameter BUS_ADDR74 = "0b0000";
-   initial begin
-	  trigger(SBSTBI);
-	end
-   //initial begin
-//	  $display("%x + %x = %x", 1, 2, trigger(1));
- //  end
+   always @(posedge SBCLKI)
+	 begin
+		trigger(SBCLKI, SBSTBI);
+	 end
 endmodule
 /* verilator lint_on UNUSED */
 /* verilator lint_on UNDRIVEN */
