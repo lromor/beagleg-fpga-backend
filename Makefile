@@ -24,5 +24,9 @@ all: $(TARGET).dfu
 	cp $< $@
 	dfu-suffix -v 1209 -p 70b1 -a $@
 
+# needs https://github.com/google/verible
+format:
+	verilog_format --inplace beagle-spi.v
+
 clean:
 	rm -rf $(TARGET).dfu $(TARGET).bit $(TARGET).asc $(TARGET).json
