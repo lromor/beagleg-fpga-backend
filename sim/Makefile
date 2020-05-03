@@ -1,4 +1,3 @@
-
 TARGET=BeagleSpi
 VFLAGS?=-Wno-lint --prefix $(TARGET)
 VINCLUDE?=-Iice40-primitives
@@ -14,7 +13,7 @@ $(VOUT_DIR): $(VERILOG_SRC) $(SIM_SRC)
 		--cc $(VERILOG_SRC) --exe $(SIM_SRC) -o ../$(TARGET)
 
 $(TARGET): $(VOUT_DIR) FORCE
-	$(MAKE) -j -C $(VOUT_DIR) -f $(TARGET).mk $(TARGET)
+	$(MAKE) -C $(VOUT_DIR) -f $(TARGET).mk $(TARGET)
 
 run: $(TARGET)
 	./$<
