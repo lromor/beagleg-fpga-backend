@@ -13,8 +13,13 @@ $(VOUT_DIR): $(VERILOG_SRC) $(SIM_SRC)
 	$(VERILATOR) $(VINCLUDE) $(VFLAGS) \
 		--cc $(VERILOG_SRC) --exe $(SIM_SRC) -o ../$(TARGET)
 
-$(TARGET): $(VOUT_DIR)
+$(TARGET): $(VOUT_DIR) FORCE
 	$(MAKE) -j -C $(VOUT_DIR) -f $(TARGET).mk $(TARGET)
+
+run: $(TARGET)
+	./$<
 
 clean:
 	rm -rf $(VOUT_DIR)
+
+.PHONY: FORCE

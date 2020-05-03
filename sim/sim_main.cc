@@ -14,7 +14,7 @@ int main(int argc, char** argv, char** env) {
     Verilated::commandArgs(argc, argv);
     BeagleSpi * top = new BeagleSpi;
     while (!Verilated::gotFinish()) {
-        ~top->clki;
+        top->clki++;
         top->eval();
     }
     delete top;
