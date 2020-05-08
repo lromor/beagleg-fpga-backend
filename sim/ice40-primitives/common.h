@@ -12,10 +12,10 @@ public:
     virtual void trigger(const Inputs *inputs, Outputs *outputs) = 0;
   };
 
-  static void SetBackend(EventListener *backend) {
+  constexpr static void SetBackend(EventListener *backend) {
     backend_ = backend; }
  
-  static void dpi_entrypoint(const Inputs *inputs, Outputs *outputs) {
+  constexpr static void dpi_entrypoint(const Inputs *inputs, Outputs *outputs) {
     if (backend_ != NULL)
       backend_->trigger(inputs, outputs);
   }

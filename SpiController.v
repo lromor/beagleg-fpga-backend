@@ -2,7 +2,7 @@
 module SpiController (
   input  clki
   );
-   SB_SPI spi (
-      .SBCLKI(clki),
-      );
+  SB_SPI spi (
+    .SBCLKI(clki)
+  );
 endmodule

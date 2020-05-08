@@ -4,21 +4,17 @@
 #include "verilated/VSpiController.h"
 #include "ice40-primitives/sb-spi.h"
 
-
-static void print_sb_spi_values(const struct sb_spi_inputs *inputs, struct sb_spi_outputs *outputs) {
-  // We need to map correctly the struct passed via DPI and here printed.
-  std::cout << *(int *)inputs << std::endl;
-  std::cout << *(int *)outputs << std::endl;
-}
-
-
 class SbSpiTest : public SbSpiMock {
 public:
+  SbSpiTest() : inputs({0}), outputs({0}) {}
   virtual ~SbSpiTest() {}
 
+  union input_data inputs;
+  union output_data outputs;
 private:
   virtual void trigger(const struct sb_spi_inputs *inputs, struct sb_spi_outputs *outputs) override {
-    print_sb_spi_values(inputs, outputs);
+    this->inputs.data = *inputs;
+    this->outputs.data = outputs;
   }
 };
 
@@ -32,7 +28,7 @@ int main(int argc, char *argv[]) {
   for (int i = 0; i < 10; ++i) {
     top_module->clki ^= 1;
     top_module->eval();
-    break;
+    std::cout << (int) sb_spi->inputs.repr.clk << std::endl;
   }
 
   delete top_module;
