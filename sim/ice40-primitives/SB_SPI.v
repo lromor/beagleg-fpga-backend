@@ -1,11 +1,43 @@
-import "DPI-C" function void trigger(input logic clki, output logic a);
+typedef struct packed {
+  logic SBCLKI;
+  logic SBRWI;
+  logic SBSTBI;
+  logic [7:0] SBADRI;
+  logic [7:0] SBDATI;
+  logic MI;
+  logic SI;
+  logic SCKI;
+  logic SCSNI;
+  logic [7:0] SBDATO;
+} DpiInputs;
+
+typedef struct packed {
+  logic SBACKO;
+  logic SPIIRQ;
+  logic SPIWKUP;
+  logic SO;
+  logic SOE;
+  logic MO;
+  logic MOE;
+  logic SCKO;
+  logic SCKOE;
+  logic [3:0] MCSNO;
+  logic [3:0] MCSNOE;
+} DpiOutputs;
+
+
+import "DPI-C" function void
+  sb_spi_dpi(
+    input DpiInputs inputs,
+    output DpiOutputs outputs
+    );
 
 /* verilator lint_off UNUSED */
 /* verilator lint_off UNDRIVEN */
 module SB_SPI (
 	input  SBCLKI,
 	input  SBRWI,
-	output  SBSTBI,
+	input  SBSTBI,
 	input  SBADRI7,
 	input  SBADRI6,
 	input  SBADRI5,
@@ -41,7 +73,7 @@ module SB_SPI (
 	output SOE,
 	output MO,
 	output MOE,
-	output SCKO, //inout in the SB verilog library, but output in the VHDL and PDF libs and seemingly in the HW itself
+	output SCKO,
 	output SCKOE,
 	output MCSNO3,
 	output MCSNO2,
@@ -51,12 +83,16 @@ module SB_SPI (
 	output MCSNOE2,
 	output MCSNOE1,
 	output MCSNOE0
-);
-   parameter BUS_ADDR74 = "0b0000";
-   always @(posedge SBCLKI)
-	 begin
-		trigger(SBCLKI, SBSTBI);
-	 end
+  );
+  parameter BUS_ADDR74 = "0b0000";
+  wire [7:0] sbadri = {SBADRI7, SBADRI6, SBADRI5, SBADRI4, SBADRI3, SBADRI2, SBADRI1, SBADRI0};
+  wire [7:0] sbdati = {SBDATI7, SBDATI6, SBDATI5, SBDATI4, SBDATI3, SBDATI2, SBDATI1, SBDATI0};
+  wire [7:0] sbdato = {SBDATO7, SBDATO6, SBDATO5, SBDATO4, SBDATO3, SBDATO2, SBDATO1, SBDATO0};
+  wire [3:0] mcsno = {MCSNO3, MCSNO2, MCSNO1, MCSNO0};
+  wire [3:0] mcsnoe = {MCSNOE3, MCSNOE2, MCSNOE1, MCSNOE0};
+  DpiInputs dpii = {SBCLKI, SBRWI, SBSTBI, sbadri, sbdati, MI, SI, SCKI, SCSNI};
+  DpiOutputs dpio = {sbdato, SBACKO, SPIIRQ, SPIWKUP, SO, SOE, MO, MOE, SCKO, SCKOE, mcsno, mcsnoe};
+
+  always_comb
+    sb_spi_dpi(dpii, dpio);
 endmodule
-/* verilator lint_on UNUSED */
-/* verilator lint_on UNDRIVEN */
