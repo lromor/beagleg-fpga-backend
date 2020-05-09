@@ -1,3 +1,5 @@
+#ifndef SB_SPI_H_
+#define SB_SPI_H_
 
 #include <vltstd/svdpi.h>
 
@@ -8,7 +10,7 @@ union input_data {
 
   // Reversed bit order due to inverted endianess
   // https://github.com/verilator/verilator/issues/1191
-  struct sb_spi_inputs_fields {
+  struct {
     uint8_t scsni : 1; // Secondary chip select.
     uint8_t scki : 1; // Secondary clock inputs.
     uint8_t si : 1; // secondary input.
@@ -22,9 +24,9 @@ union input_data {
 };
 
 union output_data {
-  uint32_t *data;
+  uint32_t data;
 
-  struct sb_spi_outputs_fields {
+  struct {
     uint8_t mcsnoe : 4; // Main chip select output enable.
     uint8_t mcsno : 4; // Main chip select output.
     uint8_t sckoe :1; // Secondary clock enable.
@@ -46,7 +48,8 @@ union output_data {
 // SbSpiDpi::RegisterBackend(my_event_listener);
 typedef DpiController<input_data, output_data> SbSpiDpi;
 
-// Callback from verilator calls our dpi controller method.
-void sb_spi_dpi (const svBitVecVal* inputs, svBitVecVal* outputs) {
-  SbSpiDpi::dpi_entrypoint((const input_data *) inputs, (output_data *) outputs);
+extern "C" {
+//typedef svBitVecVal svLogicVecVal;  // Needed in older versions of verilator?
+void sb_spi_dpi(const svLogicVecVal* inputs, svLogicVecVal* outputs);
 }
+#endif // SB_SPI_H_

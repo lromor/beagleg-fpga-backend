@@ -4,6 +4,11 @@
 #include "verilator-generated/VSpiController.h"
 #include "ice40-primitives/sb-spi.h"
 
+// Callback from verilator calls our dpi controller method.
+void sb_spi_dpi(const svLogicVecVal* inputs, svLogicVecVal* outputs) {
+  SbSpiDpi::dpi_entrypoint((const input_data *) inputs, (output_data *) outputs);
+}
+
 class SbSpiTest : public SbSpiDpi::EventListener {
 public:
   SbSpiTest() : inputs{0}, outputs{0} {}
@@ -12,7 +17,7 @@ public:
   output_data *outputs;
 
 private:
-  virtual void trigger(const input_data *inputs, output_data *outputs) override {
+  void trigger(const input_data *inputs, output_data *outputs) override {
     this->inputs = *inputs;
     this->outputs = outputs;
   }
