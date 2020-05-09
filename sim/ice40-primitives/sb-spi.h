@@ -49,7 +49,13 @@ union output_data {
 typedef DpiController<input_data, output_data> SbSpiDpi;
 
 extern "C" {
-//typedef svBitVecVal svLogicVecVal;  // Needed in older versions of verilator?
-void sb_spi_dpi(const svLogicVecVal* inputs, svLogicVecVal* outputs);
+#ifdef VERILATOR_NEW
+  typedef svLogicVecVal sb_spi_dpi_dtype;
+#else
+  typedef svBitVecVal sb_spi_dpi_dtype;
+#endif
+
+  void sb_spi_dpi(const sb_spi_dpi_dtype* inputs, sb_spi_dpi_dtype* outputs);
 }
+
 #endif // SB_SPI_H_
