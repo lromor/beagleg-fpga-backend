@@ -19,10 +19,13 @@ The SPI ip module is controlled via a verilog primitive `SB_SPI`
 
 To run the current simulation execute in a terminal `make run`.
 
+## Tasks/Ideas
+
+- [ ] Make test benches prefixed with ct (i.e. -my-dpi-interface_test.cc) as "circuit
+      testers" to ensure proper port matching between verilog/C++.
+
 # References
 
 - [Ice40 Verilog Primitives][ice40-primitives]
 - [Verilator Official Website][verilator]
 - [Ice40 SPI IP datasheet][ice40-spi]
-
-

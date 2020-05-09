@@ -8,10 +8,10 @@ typedef struct packed {
   logic SI;
   logic SCKI;
   logic SCSNI;
-  logic [7:0] SBDATO;
 } DpiInputs;
 
 typedef struct packed {
+  logic [7:0] SBDATO;
   logic SBACKO;
   logic SPIIRQ;
   logic SPIWKUP;

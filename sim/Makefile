@@ -5,6 +5,9 @@ VERILATOR?=verilator
 VOUT_DIR=verilated
 VERILATOR_INCLUDE_PATH?=/usr/share/verilator/include
 
+# foo.c:5: note: Offset of packed bit-field 'b' has changed in GCC 4.4
+# https://gcc.gnu.org/gcc-4.4/changes.html
+CFLAGS+=-Wno-packed-bitfield-compat
 CFLAGS+=-Wall \
 	-I$(VERILATOR_INCLUDE_PATH) \
 	-I$(VERILATOR_INCLUDE_PATH)/vltstd
