@@ -3,7 +3,7 @@ VINCLUDE?=-Iice40-primitives
 VERILOG_SRC_PATH=..
 VERILATOR?=verilator
 VOUT_DIR=verilated
-VERILATOR_INCLUDE_PATH?=/usr/share/verilator/include
+VERILATOR_INCLUDE_PATH?=$(shell dirname `which verilator`)/../share/verilator/include
 
 # foo.c:5: note: Offset of packed bit-field 'b' has changed in GCC 4.4
 # https://gcc.gnu.org/gcc-4.4/changes.html
