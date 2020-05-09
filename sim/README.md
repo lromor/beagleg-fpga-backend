@@ -21,7 +21,7 @@ To run the current simulation execute in a terminal `make run`.
 
 ## Tasks/Ideas
 
-- [ ] Make test benches prefixed with ct (i.e. -my-dpi-interface_test.cc) as "circuit
+- [ ] Make test benches prefixed with ct (i.e. ct-my-dpi-interface_test.cc) as "circuit
       testers" to ensure proper port matching between verilog/C++.
 
 # References
