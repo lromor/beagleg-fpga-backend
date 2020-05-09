@@ -2,7 +2,7 @@ VFLAGS?=-Wno-lint
 VINCLUDE?=-Iice40-primitives
 VERILOG_SRC_PATH=..
 VERILATOR?=verilator
-VOUT_DIR=verilated
+VOUT_DIR=verilator-generated
 VERILATOR_INCLUDE_PATH?=$(shell dirname `which verilator`)/../share/verilator/include
 
 # foo.c:5: note: Offset of packed bit-field 'b' has changed in GCC 4.4

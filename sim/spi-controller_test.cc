@@ -1,7 +1,7 @@
 
 #include <iostream>
 
-#include "verilated/VSpiController.h"
+#include "verilator-generated/VSpiController.h"
 #include "ice40-primitives/sb-spi.h"
 
 class SbSpiTest : public SbSpiDpi::EventListener {
