@@ -1,0 +1,1 @@
+g++ -std=c++17 -Wall -g -O0 -Wno-packed-bitfield-compat -I/usr/bin/../share/verilator/include -I/usr/bin/../share/verilator/include/vltstd -I/usr/src/gtest/include -I/usr/src/gmock/include

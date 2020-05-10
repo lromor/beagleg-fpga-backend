@@ -58,4 +58,21 @@ extern "C" {
   void sb_spi_dpi(const sb_spi_dpi_dtype* inputs, sb_spi_dpi_dtype* outputs);
 }
 
+// A simulated SB_SPI IP System.
+class SbSpiMock : public SbSpiDpi::EventListener {
+public:
+  SbSpiMock();
+  virtual ~SbSpiMock();
+
+  const input_data GetInput();
+  const output_data GetOutput();
+
+private:
+  void trigger(const input_data *inputs, output_data *outputs) override;
+
+  class Impl;
+  std::unique_ptr<Impl> impl_;
+
+};
+
 #endif // SB_SPI_H_

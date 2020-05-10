@@ -7,8 +7,7 @@ template<typename Inputs, typename Outputs>
 class DpiController {
 public:
   class EventListener {
-    friend class DpiController;
-  private:
+  public:
     virtual void trigger(const Inputs *inputs, Outputs *outputs) = 0;
   };
 

@@ -3,14 +3,14 @@ VINCLUDE?=-Iice40-primitives
 VERILOG_SRC_PATH=..
 VERILATOR?=verilator
 VOUT_DIR=verilator-generated
-VERILATOR_INCLUDE_PATH?=$(shell dirname `which verilator`)/../share/verilator/include
+VERILATOR_INCLUDE?=$(shell dirname `which verilator`)/../share/verilator/include
 
 # foo.c:5: note: Offset of packed bit-field 'b' has changed in GCC 4.4
 # https://gcc.gnu.org/gcc-4.4/changes.html
 CFLAGS+=-Wno-packed-bitfield-compat
 CFLAGS+=-Wall \
-	-I$(VERILATOR_INCLUDE_PATH) \
-	-I$(VERILATOR_INCLUDE_PATH)/vltstd
+	-I$(VERILATOR_INCLUDE) \
+	-I$(VERILATOR_INCLUDE)/vltstd
 
 CXXFLAGS+=-std=c++17 $(CFLAGS)
 CXX?=g++
@@ -19,9 +19,14 @@ VERILATOR_TARGETS=SpiController
 VERILATOR_DEPS:=$(VERILATOR_TARGETS:%=V%__ALL.a) $(VERILATOR_TARGETS:%=V%.h)
 VERILATOR_DEPS:=$(addprefix $(VOUT_DIR)/, $(VERILATOR_DEPS))
 
+COMMON_LIBS=ice40-primitives/libice40dpi.a
+
 TARGETS=spi-controller_test
 
 all: $(TARGETS)
+
+ice40-primitives/libice40dpi.a:
+	$(MAKE) -C ice40-primitives
 
 $(VOUT_DIR)/V%__ALL.a $(VOUT_DIR)/V%.h: $(VERILOG_SRC_PATH)/%.v
 	$(VERILATOR) $(VINCLUDE) $(VFLAGS) --Mdir $(VOUT_DIR) --cc $<
@@ -32,7 +37,7 @@ verilated-deps: $(VERILATOR_DEPS)
 %.o: %.cc verilated-deps
 	$(CXX) $(CXXFLAGS)  -c  $< -o $@
 
-spi-controller_test: spi-controller_test.o $(VOUT_DIR)/VSpiController__ALL.a
+spi-controller_test: spi-controller_test.o $(VOUT_DIR)/VSpiController__ALL.a $(COMMON_LIBS)
 	$(CXX) -o $@  $^ $(LDFLAGS)
 
 clean:
