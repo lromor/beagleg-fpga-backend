@@ -6,13 +6,27 @@
 #include <vector>
 #include <string>
 
-template<typename T, size_t size>
-const std::vector<T> Chars2Bits(const char *(&data)[size]);
+// Convert an array of bits into an array of '0', '1' characters.
+// The parameter "data" contains the array of bytes of size at least
+// num_bits / 8 + 1.
+// "num_bits" is the amount of bits to convert into characters starting from LSB.
+// Parallel bits must point to a char array of least "num_bits" characters.
+void Bits2Chars(const uint8_t *data, const size_t num_bits, char *parallel_bits);
 
-template<char zero = '0', char one = '1'>
-std::string Bits2Chars(const uint8_t *bits, size_t nbits);
+// The inverse operation of Bits2Chars.
+void Chars2Bits(const char *parallel_bits, const size_t num_bits, uint8_t *data);
 
-// Template function implementations.
-#include "bits.tcc"
+// Higher level function that converts an array of null terminated strings(traces)
+// into a sequence of parallel bits. The function supports up to 64 traces.
+// The parameter "traces" is the array of null terminated strings.
+// "num_traces" is the number of null terminated strings. "data" points
+// to an array of at least size "data_elements".
+// An example can be found in bits_test.cc
+bool Traces2Bits(const char *traces[], const size_t num_traces, uint64_t *data,
+                 const size_t data_elements);
+
+// The inverse of Traces2Bits.
+std::vector<std::string> Bits2Traces(const uint64_t *data, const size_t data_elements,
+                                     const size_t num_traces);
 
 #endif // _UTILS_H

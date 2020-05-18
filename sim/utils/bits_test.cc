@@ -1,46 +1,60 @@
 
+#include <iostream>
 #include <stdint.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 #include "utils.h"
 
-union input_data {
-  uint8_t data[2];
-  struct input {
-    uint8_t b1 : 1;
-    uint8_t b2 : 1;
-  } bits;
+static const char *sample_trace[] = {
+  "", // Empty trace
+  "¯", // Start as high
+  "¯_¯0__¯¯1¯¯__¯¯__1¯¯¯__¯11__¯¯_0", // Mixed trace
+  "_¯1_¯¯__¯-¯_0--_¯¯__0¯__¯_", // Shorter mixed.
+  "k2jhekj12h" // invalid
 };
 
-// static const char *sample_dash[] = {
-//   "-_-_-_",
-//   "--_--_"
-// };
+static const std::vector<std::string> sample_expected_trace = {
+  {"________________________________"},
+  {"¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯"},
+  {"¯_¯___¯¯¯¯¯__¯¯__¯¯¯¯__¯¯¯__¯¯__"},
+  {"_¯¯_¯¯__¯¯¯__¯¯_¯¯___¯__¯_______"},
+};
 
-// static const char *sample_macron[] = {
-//   "¯_¯_¯_",
-//   "¯¯_¯¯_"
-// };
+TEST(Bits2Chars2BitsTest, back_and_forth_conversion) {
+  uint64_t sample = 0xc6ed41bfa0b47df0;
+  uint64_t mask = 0;
+  char parallel_bits[64] = {0};
+  uint64_t result;
 
-// static const std::vector<union input_data> samples_result = {
-//   {{ 0b11 }}, {{ 0b01 }}, {{ 0b10 }}, {{ 0b01 }}, {{ 0b11 }}, {{ 0b00 }}
-// };
-
-// TEST(Chars2BitsTest, simple_dashed) {
-//   auto res = Chars2Bits<input_data>(sample_dash);
-//   EXPECT_THAT(samples_result, ::testing::ElementsAre(res));
-// }
-
-TEST(Chars2BitsTest, order) {
-  const char *in[] = { "-_", "__" };
-  auto res = Chars2Bits<input_data>(in);
-  EXPECT_EQ(1, res[0].bits.b1);
-  EXPECT_EQ(0, res[0].bits.b2);
-  EXPECT_EQ(0, res[1].bits.b1);
-  EXPECT_EQ(0, res[1].bits.b2);
+  for (unsigned int i = 0; i < 64; ++i) {
+    const uint64_t data = sample & mask;
+    Bits2Chars((uint8_t *) &data, i, parallel_bits);
+    result = 0;
+    Chars2Bits(parallel_bits, i, (uint8_t *)&result);
+    EXPECT_EQ(data, result);
+    mask |= 1ULL << i;
+  }
 }
 
+TEST(Traces2Bits, return_value_and_back_forth) {
+  bool res;
+  uint64_t data[32];
+  // Not all traces reaching the null char.
+  res = Traces2Bits(sample_trace, 4, data, 31);
+  EXPECT_FALSE(res);
+
+  // All traces reaching null char, wrong size
+  res = Traces2Bits(sample_trace, 4, data, 33);
+  EXPECT_FALSE(res);
+
+  // All traces reaching null char, exact size provided.
+  res = Traces2Bits(sample_trace, 4, data, 32);
+  EXPECT_TRUE(res);
+
+  auto trace = Bits2Traces(data, 32, 4);
+  EXPECT_THAT(trace, ::testing::ContainerEq(sample_expected_trace));
+}
 
 int main(int argc, char *argv[]) {
   ::testing::InitGoogleTest(&argc, argv);
