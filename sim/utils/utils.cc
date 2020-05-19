@@ -79,7 +79,8 @@ bool Traces2Bits(const char *traces[], const size_t num_traces,
       case '\0':
         continue;
       default:
-        fprintf(stderr, "Invalid character: '%c'(0x%x)\n", *trace_ptr, *trace_ptr);
+        fprintf(stderr, "Invalid character '%c'(0x%x) at bit: %u, column: %u.\n",
+                *trace_ptr, *trace_ptr, bit, column);
         assert(false);
       }
 
@@ -113,11 +114,7 @@ std::vector<std::string> Bits2Traces(const uint64_t *data, const size_t data_ele
     // Write low/high symbols.
     for (unsigned int j = 0; j < num_traces; ++j) {
       const char digit = parallel_bits[j];
-      if (digit == '1') {
-        traces[j].append("¯");
-        } else {
-        traces[j].append("_");
-      }
+      traces[j].append(digit == '1' ? "¯" : "_");
     }
   }
   return traces;
