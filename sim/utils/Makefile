@@ -12,10 +12,10 @@ CXX?=g++
 
 LDFLAGS+=-lpthread -lm
 
-OBJECTS=bits.o
+OBJECTS=utils.o
 GENLIB=libutils.a
 
-UNITTEST_BINARIES=bits_test
+UNITTEST_BINARIES=utils_test
 TEST_FRAMEWORK_OBJECTS=gtest-all.o gmock-all.o
 
 DEPENDENCY_RULES=$(OBJECTS:=.d) $(UNITTEST_BINARIES:=.o.d)

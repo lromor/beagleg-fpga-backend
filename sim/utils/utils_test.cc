@@ -15,10 +15,10 @@ static const char *sample_trace[] = {
 };
 
 static const std::vector<std::string> sample_expected_trace = {
-  {"________________________________"},
-  {"¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯"},
-  {"¯_¯___¯¯¯¯¯__¯¯__¯¯¯¯__¯¯¯__¯¯__"},
-  {"_¯¯_¯¯__¯¯¯__¯¯_¯¯___¯__¯_______"},
+  "________________________________",
+  "¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯",
+  "¯_¯___¯¯¯¯¯__¯¯__¯¯¯¯__¯¯¯__¯¯__",
+  "_¯¯_¯¯__¯¯¯__¯¯_¯¯___¯__¯_______",
 };
 
 TEST(Bits2Chars2BitsTest, back_and_forth_conversion) {
@@ -37,7 +37,7 @@ TEST(Bits2Chars2BitsTest, back_and_forth_conversion) {
   }
 }
 
-TEST(Traces2Bits, return_value_and_back_forth) {
+TEST(Traces2Bits2Traces, return_value_and_back_forth) {
   bool res;
   uint64_t data[32];
   // Not all traces reaching the null char.
@@ -54,6 +54,23 @@ TEST(Traces2Bits, return_value_and_back_forth) {
 
   auto trace = Bits2Traces(data, 32, 4);
   EXPECT_THAT(trace, ::testing::ContainerEq(sample_expected_trace));
+}
+
+TEST(Traces2Bits, simple_test) {
+  const char *simple_trace[] = {
+    "__¯¯__¯¯__¯",
+    "_¯¯_¯__¯_¯¯"
+  };
+
+  uint64_t data[11] = {0};
+
+  // All traces reaching null char, exact size provided.
+  bool res = Traces2Bits(simple_trace, 2, data, 11);
+  EXPECT_TRUE(res);
+  EXPECT_THAT(
+    std::vector<uint64_t>(data, std::end(data)),
+    ::testing::ElementsAre(0b00, 0b10, 0b11, 0b01, 0b10, 0b00,
+                           0b01, 0b11, 0b00, 0b10, 0b11));
 }
 
 int main(int argc, char *argv[]) {
