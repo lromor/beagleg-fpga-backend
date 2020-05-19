@@ -1,3 +1,4 @@
+compiler-flags
 verilator-generated
 *_test
 
