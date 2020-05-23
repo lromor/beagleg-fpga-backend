@@ -1,20 +1,27 @@
 
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+
 #include "verilator-generated/VSB_SPI.h"
 #include "sb-spi.h"
 #include "../utils/utils.h"
 
+
 class SbSpiMain {
 public:
-  SbSpiMain(const VSB_SPI *sb_spi_module) : module_(sb_spi_module) {}
+  SbSpiMain(VSB_SPI * const sb_spi_module) : module_(sb_spi_module) {}
 
-  SbSend(const uint32_t data) {
-    const input_data input = { data };
-    top_module.SBCLKI ^= 1;
-    top_module.eval();
+  void SbSend(const input_data data) {
+    // Set the data
+    // Toggle clock
+    module_->SBCLKI ^= 1;
+
+    // Evaluate
+    module_->eval();
   }
 
 private:
-  VSB_SPI *module_;
+  VSB_SPI * const module_;
 };
 
 TEST(SbSpi, write_register) {
@@ -42,15 +49,12 @@ TEST(SbSpi, write_register) {
     "_¯¯¯¯¯_", // sbdati0
   };
 
-  Verilated::commandArgs(argc, argv);
   VSB_SPI sb_spi_module = VSB_SPI();
-  SbSpiMock sb_spi_backend = SbSpiMock();
+  SbSpiSecondaryMock sb_spi_backend = SbSpiSecondaryMock();
   SbSpiDpi::SetBackend(&sb_spi_backend);
 
-  SbSpiMain main = SbSpiMain(sb_spi_module);
-  for (auto i : Traces2Bits(secondary_input)) {
-    main.Send(i)
-  }
+  SbSpiMain main(&sb_spi_module);
+  // Send the bits...
 }
 
 int main(int argc, char *argv[]) {

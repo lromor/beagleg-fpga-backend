@@ -1,6 +1,7 @@
 #ifndef _SB_SPI_H
 #define _SB_SPI_H
 
+#include <stdint.h>
 #include <vltstd/svdpi.h>
 
 // Current default verilator.
