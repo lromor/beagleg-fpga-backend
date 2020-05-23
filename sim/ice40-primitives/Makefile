@@ -43,6 +43,9 @@ all : $(GENLIB)
 $(GENLIB): $(OBJECTS)
 	$(AR) rcs $@ $^
 
+../utils/libutils.a:
+	$(MAKE) -C ../utils
+
 test: $(UNITTEST_BINARIES)
 	for test_bin in $(UNITTEST_BINARIES) ; do echo ; echo $$test_bin; ./$$test_bin || exit 1 ; done
 
