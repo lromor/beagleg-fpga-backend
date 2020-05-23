@@ -2,12 +2,17 @@ GTEST_SOURCE?=/usr/src/gtest
 GMOCK_SOURCE?=/usr/src/gmock
 
 GTEST_INCLUDE=-I$(GTEST_SOURCE)/include -I$(GMOCK_SOURCE)/include
+
+VFLAGS?=-Wno-lint
+VINCLUDE?=-Iice40-primitives
+VERILOG_SRC_PATH=.
+VERILATOR?=verilator
+VOUT_DIR=verilator-generated
 VERILATOR_INCLUDE?=$(shell dirname `which verilator`)/../share/verilator/include
 
 CFLAGS+=-Wall -g -O0
 CFLAGS+=-Wno-packed-bitfield-compat
 CFLAGS+=-I$(VERILATOR_INCLUDE) -I$(VERILATOR_INCLUDE)/vltstd
-
 
 # See toplevel Makefile comment
 CXXFLAGS+=-std=c++17 $(CFLAGS)
@@ -17,6 +22,10 @@ LDFLAGS+=-lpthread -lm
 
 OBJECTS=sb-spi.o
 GENLIB=libice40dpi.a
+
+VERILATOR_TARGETS=SB_SPI
+VERILATOR_DEPS:=$(VERILATOR_TARGETS:%=V%__ALL.a) $(VERILATOR_TARGETS:%=V%.h)
+VERILATOR_DEPS:=$(addprefix $(VOUT_DIR)/, $(VERILATOR_DEPS))
 
 UNITTEST_BINARIES=sb-spi_test
 TEST_FRAMEWORK_OBJECTS=gtest-all.o gmock-all.o
@@ -34,11 +43,16 @@ test: $(UNITTEST_BINARIES)
 valgrind-test: $(UNITTEST_BINARIES)
 	for test_bin in $(UNITTEST_BINARIES) ; do valgrind --track-origins=yes --leak-check=full --error-exitcode=1 -q ./$$test_bin || exit 1; done
 
+$(VOUT_DIR)/V%__ALL.a $(VOUT_DIR)/V%.h: $(VERILOG_SRC_PATH)/%.v
+	$(VERILATOR) $(VINCLUDE) $(VFLAGS) --Mdir $(VOUT_DIR) --cc $<
+	$(MAKE) -C $(VOUT_DIR) -f ../../utils/AppendVkObj.mk -f V$*.mk default
+
+verilated-deps: $(VERILATOR_DEPS)
 
 %_test: %_test.o $(GENLIB) $(TEST_FRAMEWORK_OBJECTS) compiler-flags
 	$(CXX) -o $@ $< $(GENLIB) $(LDFLAGS) $(TEST_FRAMEWORK_OBJECTS)
 
-%.o: %.cc compiler-flags
+%.o: %.cc compiler-flags verilated-deps
 	$(CXX) $(CXXFLAGS)  -c  $< -o $@
 	@$(CXX) $(CXXFLAGS) -MM $< > $@.d
 
@@ -62,4 +76,4 @@ clean:
 compiler-flags: FORCE
 	@echo '$(CXX) $(CXXFLAGS) $(GTEST_INCLUDE)' | cmp -s - $@ || echo '$(CXX) $(CXXFLAGS) $(GTEST_INCLUDE)' > $@
 
-.PHONY: FORCE
+.PHONY: FORCE verilated-deps
