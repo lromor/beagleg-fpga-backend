@@ -3,6 +3,9 @@
 
 #include <vltstd/svdpi.h>
 
+// Current default verilator.
+#define VERILATOR_NEW 1
+
 #include "common.h"
 
 #define SPICR0_ADDR 0b1000 // SPI Control Register 0
