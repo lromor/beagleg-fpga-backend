@@ -1,5 +1,5 @@
-#ifndef SB_SPI_H_
-#define SB_SPI_H_
+#ifndef _SB_SPI_H
+#define _SB_SPI_H
 
 #include <vltstd/svdpi.h>
 

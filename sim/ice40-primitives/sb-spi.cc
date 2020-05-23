@@ -1,9 +1,8 @@
-
 #include "sb-spi.h"
 
 // Callback from verilator calls our dpi controller method.
 void sb_spi_dpi(const sb_spi_dpi_dtype* inputs, sb_spi_dpi_dtype* outputs) {
-  SbSpiDpi::dpi_entrypoint((const input_data *) inputs, (output_data *) outputs);
+  SbSpiDpi::DpiEntrypoint((const input_data *) inputs, (output_data *) outputs);
 }
 
 struct sb_spi_registers {

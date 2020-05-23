@@ -8,15 +8,15 @@ class DpiController {
 public:
   class EventListener {
   public:
-    virtual void trigger(const Inputs *inputs, Outputs *outputs) = 0;
+    virtual void Trigger(const Inputs *inputs, Outputs *outputs) = 0;
   };
 
   constexpr static void SetBackend(EventListener *backend) {
     backend_ = backend; }
  
-  constexpr static void dpi_entrypoint(const Inputs *inputs, Outputs *outputs) {
+  constexpr static void DpiEntrypoint(const Inputs *inputs, Outputs *outputs) {
     if (backend_ != NULL)
-      backend_->trigger(inputs, outputs);
+      backend_->Trigger(inputs, outputs);
   }
 
 private:
