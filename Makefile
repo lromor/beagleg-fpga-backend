@@ -25,8 +25,8 @@ flash: $(TARGET).bit
 	tinyprog -p $<
 
 # needs https://github.com/google/verible
-format:
-	verilog_format --inplace beagle-spi.v
+format: $(TARGET).sv $(TARGET).v SpiController.v
+	verilog_format --inplace $<
 
 clean:
 	rm -rf $(TARGET).dfu $(TARGET).bit $(TARGET).asc $(TARGET).json
