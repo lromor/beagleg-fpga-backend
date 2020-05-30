@@ -21,8 +21,8 @@ all: $(TARGET).bit
 %.bit: %.asc
 	icepack $< $@
 
-flash:
-	tinyprog -p $(TARGET)
+flash: $(TARGET)
+	tinyprog -p $<
 
 # needs https://github.com/google/verible
 format:
