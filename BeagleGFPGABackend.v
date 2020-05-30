@@ -3,7 +3,7 @@
 // Whenever RECORD_SIZE_BYTES is filled,
 module Fifo #(
 	parameter integer RECORD_SIZE_BYTES = 16,
-	parameter integer SLOTS = 32,
+	parameter integer SLOTS = 32
 )(
   input logic 			       rst, input logic rst,
 
