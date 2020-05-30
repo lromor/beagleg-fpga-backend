@@ -11,3 +11,14 @@ set_io mosi C9     # Pin 17
 set_io miso A9     # Pin 18
 set_io sck B8      # Pin 19
 set_io cs A8       # Pin 20
+
+
+set_io p1 A2
+set_io p2 A1
+set_io p3 B1
+set_io p4 C2
+set_io p5 C1
+set_io p6 D2
+set_io p7 D1
+set_io p8 E2
+set_io p9 E1
