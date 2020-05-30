@@ -1,2 +1,7 @@
-set_io clki B2
-set_io out A2
+set_io clk B2      # 16 Mhz system clock
+set_io out A2      # Pin 1
+
+# Some diagnostic LEDs
+set_io led_red D8    # Pin 16
+set_io led_green D9  # Pin 15
+set_io led_blue H9   # Pin 14

@@ -1,15 +1,15 @@
 PCF?=tinyfpga-bx.pcf
 PNRFLAGS?=--lp8k --package cm81
 
-YOSYS?=yosys
 TARGET=BeagleGFPGABackend
+SOURCES=BeagleGFPGABackend.v led-blinker.v fifo.v
+
+YOSYS?=yosys
 
 all: $(TARGET).bit
 
-# Use *Yosys* to generate the synthesized netlist.
-# This is called the **synthesis** and **tech mapping** step.
-%.json: %.v
-	$(YOSYS) -p 'read_verilog -sv $< ; synth_ice40 -top top -json $@'
+BeagleGFPGABackend.json: $(SOURCES)
+	$(YOSYS) -p 'read_verilog -sv $^ ; synth_ice40 -top top -json $@'
 
 # Use **nextpnr** to generate the FPGA configuration.
 # This is called the **place** and **route** step.
@@ -25,7 +25,7 @@ flash: $(TARGET).bit
 	tinyprog -p $<
 
 # needs https://github.com/google/verible
-format: $(TARGET).sv $(TARGET).v SpiController.v
+format: $(SOURCES)
 	verilog_format --inplace $^
 
 clean:
