@@ -26,7 +26,7 @@ flash: $(TARGET).bit
 
 # needs https://github.com/google/verible
 format: $(TARGET).sv $(TARGET).v SpiController.v
-	verilog_format --inplace $<
+	verilog_format --inplace $^
 
 clean:
 	rm -rf $(TARGET).dfu $(TARGET).bit $(TARGET).asc $(TARGET).json
