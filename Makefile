@@ -1,4 +1,4 @@
-PCF?=ice40-pinout.pcf
+PCF?=tinyfpga-bx.pcf
 PNRFLAGS?=--lp8k --package cm81
 
 YOSYS?=yosys
