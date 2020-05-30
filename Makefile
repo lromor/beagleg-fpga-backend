@@ -1,9 +1,10 @@
 PCF?=ice40-pinout.pcf
-PNRFLAGS?=--up5k --package uwg30
-YOSYS?=yosys
-TARGET=beagle-spi
+PNRFLAGS?=--lp8k --package cm81
 
-all: $(TARGET).dfu
+YOSYS?=yosys
+TARGET=BeagleGFPGABackend
+
+all: $(TARGET).bit
 
 # Use *Yosys* to generate the synthesized netlist.
 # This is called the **synthesis** and **tech mapping** step.
@@ -20,9 +21,8 @@ all: $(TARGET).dfu
 %.bit: %.asc
 	icepack $< $@
 
-%.dfu: %.bit
-	cp $< $@
-	dfu-suffix -v 1209 -p 70b1 -a $@
+flash:
+	tinyprog -p $(TARGET)
 
 # needs https://github.com/google/verible
 format:
@@ -30,3 +30,5 @@ format:
 
 clean:
 	rm -rf $(TARGET).dfu $(TARGET).bit $(TARGET).asc $(TARGET).json
+
+.PHONY: flash
