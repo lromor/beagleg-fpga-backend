@@ -28,6 +28,9 @@ flash: $(TARGET).bit
 format: $(SOURCES)
 	verilog_format --inplace $^
 
+lint: $(SOURCES)
+	verilog_lint $^
+
 clean:
 	rm -rf $(TARGET).dfu $(TARGET).bit $(TARGET).asc $(TARGET).json
 
