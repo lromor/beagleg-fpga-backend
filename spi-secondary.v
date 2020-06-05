@@ -47,12 +47,12 @@ module SpiSecondary #(
           // Increment the counter
           counter <= counter + 1;
 
-          if (word_ready == 1'b1)
-            counter[WORD_BITS_SIZE] <= 1'b0;
-
         end // if (rising)
       // Update state
       sck_buffer <= {sck_buffer[1:0], sck};
+
+      if (word_ready == 1'b1)
+        counter[WORD_BITS_SIZE] <= 1'b0;
 
     end // always@ (posedge clk and posedge sck)
 
