@@ -2,7 +2,7 @@ PCF?=tinyfpga-bx.pcf
 PNRFLAGS?=--lp8k --package cm81
 
 TARGET=BeagleGFPGABackend
-SOURCES=BeagleGFPGABackend.v led-blinker.v fifo.v
+SOURCES=BeagleGFPGABackend.v led-blinker.v fifo.v spi-secondary.v
 
 YOSYS?=yosys
 
