@@ -17,8 +17,8 @@ module SpiSecondary #(
  );
 
   localparam integer WORD_BITS_SIZE = $clog2(WORD_BITS);
-  reg [WORD_BITS-1:0] data_received; // Register of size WORD_BITS + 1.
-  reg [WORD_BITS_SIZE:0] counter; // Count how many bits we received.
+  reg [WORD_BITS-1:0] data_received;  // Register of size WORD_BITS + 1.
+  reg [WORD_BITS_SIZE:0] counter;  // Count how many bits we received.
 
   reg [2:0] sck_buffer = 2'b00;
   wire rising = (sck_buffer[2:1] == 2'b01);  // now we can detect SCK rising edges
@@ -30,30 +30,26 @@ module SpiSecondary #(
   assign data_word_received = data_received;
 
   // Initialize the registers
-  initial
-    begin
-       counter = {(WORD_BITS_SIZE + 1){1'b0}};
-       data_received = {(WORD_BITS){1'b0}};
-    end // initial begin
+  initial begin
+    counter = {(WORD_BITS_SIZE + 1) {1'b0}};
+    data_received = {(WORD_BITS) {1'b0}};
+  end  // initial begin
 
   // Shift register.
-  always@(posedge clk)
-    begin
-      if (rising)
-        begin
-          // Shift data_word received by one bit and include the new bit.
-          data_received <= {data_received[WORD_BITS:0], in_bit};
+  always @(posedge clk) begin
+    if (rising) begin
+      // Shift data_word received by one bit and include the new bit.
+      data_received <= {data_received[WORD_BITS:0], in_bit};
 
-          // Increment the counter
-          counter <= counter + 1;
+      // Increment the counter
+      counter <= counter + 1;
 
-        end // if (rising)
-      // Update state
-      sck_buffer <= {sck_buffer[1:0], sck};
+    end  // if (rising)
+    // Update state
+    sck_buffer <= {sck_buffer[1:0], sck};
 
-      if (word_ready == 1'b1)
-        counter[WORD_BITS_SIZE] <= 1'b0;
+    if (word_ready == 1'b1) counter[WORD_BITS_SIZE] <= 1'b0;
 
-    end // always@ (posedge clk and posedge sck)
+  end  // always@ (posedge clk and posedge sck)
 
 endmodule  // SpiSecondary
