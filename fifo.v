@@ -32,8 +32,8 @@ module Fifo #(
 
   // The wires of the read/write positions are a bit less because we use
   // it as indexes for the storage and they need the proper modular arithmetic.
-  wire [STORAGE_SIZE-1:0] write_pos_idx_w = write_pos_r[STORAGE_POS_SIZE-1:0];
-  wire [STORAGE_SIZE-1:0] read_pos_idx_w = read_pos_r[STORAGE_POS_SIZE-1:0];
+  wire [STORAGE_SIZE-1:0] write_pos_idx_w = write_pos_r[STORAGE_POS_SIZE - 1:0];
+  wire [STORAGE_SIZE-1:0] read_pos_idx_w = read_pos_r[STORAGE_POS_SIZE - 1:0];
 
   wire empty = (size >> RECORD_POS_SIZE) == 0;
   wire full = (size == STORAGE_SIZE);
@@ -46,8 +46,7 @@ module Fifo #(
   generate
     genvar i;
     for (i = 0; i < RECORD_WORDS; i = i + 1)
-      assign
-          data_out[(i+1)*WORD_SIZE-1:i*WORD_SIZE] = storage[read_pos_idx_w+i];
+      assign data_out[(i + 1) * WORD_SIZE - 1:i * WORD_SIZE] = storage[read_pos_idx_w + i];
   endgenerate
 
   // Write stuff

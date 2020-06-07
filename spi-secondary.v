@@ -34,7 +34,7 @@ module SpiSecondary #(
   always @(posedge clk) begin
     if (rising) begin
       // Shift data_word received by one bit and include the new bit.
-      data_received <= {data_received[WORD_BITS-1:0], in_bit};
+      data_received <= {data_received[WORD_BITS - 1:0], in_bit};
 
       // Increment the counter
       counter <= counter + 1;
