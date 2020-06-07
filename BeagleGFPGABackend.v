@@ -4,10 +4,10 @@ module top (input clk,
   output led_red,
   output led_green,
   output led_blue,
-  input mosi,
-  input sck,
-  input cs,
-  output miso,
+  input spi_mosi,
+  input spi_sck,
+  input spi_cs,
+  output spi_miso,
   output p1,
   output p2,
   output p3,
@@ -15,9 +15,8 @@ module top (input clk,
   output p5,
   output p6,
   output p7,
-  output p8,
-  output p9);
-
+  output p8
+);
   LedBlinker blinker(.clk(clk),
                       .led_red(led_red),
                       .led_green(led_green),
@@ -36,10 +35,12 @@ module top (input clk,
   reg deplete_r = 1'b0;
   reg [15:0] fifo_out;
 
+  assign data_out = fifo_out[7:0];
+
   // Use the fifo as buffer for the data collected
   // from the spi.
-  Fifo #(.INPUT_SIZE_BYTES(1),
-         .RECORD_SIZE(2),
+  Fifo #(.WORD_SIZE(8),
+         .RECORD_WORDS(2),
          .SLOTS(16)) fifo(.clk(clk),
                           // Write stuff
                           .write_en(spi_main_data_ready_w),
@@ -52,18 +53,16 @@ module top (input clk,
                           .data_out(fifo_out));
 
   SpiSecondary spi_secondary(.clk(clk),
-                              .sck(sck),
-                              .in_bit(mosi),
-                              .data_word_received(spi_main_data_w),
-                              .word_ready(spi_main_data_ready_w));
+                             .sck(spi_sck),
+                             .in_bit(spi_mosi),
+                             .data_word_received(spi_main_data_w),
+                             .word_ready(spi_main_data_ready_w));
 
   // Whenever it's full, deplete it in data_out.
   always @(posedge clk) begin
     if (fifo_full_w) deplete_r <= 1'b1;
 
     if (deplete_r) begin
-      // For testing purposes
-      data_out <= fifo_out[7:0];
       if (fifo_empty_w) deplete_r <= 0;
     end
   end
