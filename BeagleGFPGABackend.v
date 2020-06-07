@@ -23,7 +23,6 @@ module top (input clk,
                       .led_green(led_green),
                       .led_blue(led_blue));
 
-
    // Spi
    wire [7:0] spi_main_data_w;
    wire       spi_main_data_ready_w;
@@ -35,21 +34,22 @@ module top (input clk,
 
    // Depleting test
    reg        deplete_r = 1'b0;
+   reg [15:0]  fifo_out;
 
    // Use the fifo as buffer for the data collected
    // from the spi.
-   Fifo fifo(.clk(clk),
-             // Write stuff
-             .write_en(spi_main_data_ready_w & ~deplete_r),
-             .data_in(spi_main_data_w),
-             // Status
-             .full(fifo_full_w),
-             .empty(fifo_empty_w),
-             // Read stuff
-             .read_en(deplete_r),
-             .data_out(data_out)
-             //.debug(data_out)
-);
+   Fifo #(.INPUT_SIZE_BYTES(1),
+          .RECORD_SIZE(2),
+          .SLOTS(16)) fifo(.clk(clk),
+                           // Write stuff
+                           .write_en(spi_main_data_ready_w),
+                           .data_in(spi_main_data_w),
+                           // Status
+                           .full(fifo_full_w),
+                           .empty(fifo_empty_w),
+                           // Read stuff
+                           .read_en(deplete_r),
+                           .data_out(fifo_out));
 
    SpiSecondary spi_secondary(.clk(clk),
                               .sck(sck),
@@ -57,12 +57,19 @@ module top (input clk,
                               .data_word_received(spi_main_data_w),
                               .word_ready(spi_main_data_ready_w));
 
+   // Whenever it's full, deplete it in data_out.
    always@(posedge clk)
      begin
         if (fifo_full_w)
           deplete_r <= 1'b1;
-        else if (deplete_r & fifo_empty_w)
-          deplete_r <= 1'b0;
+
+        if (deplete_r)
+          begin
+             // For testing purposes
+             data_out <= fifo_out[7:0];
+             if (fifo_empty_w)
+               deplete_r <=0;
+          end
      end
 
    // If the fifo is full, ignore the spi
