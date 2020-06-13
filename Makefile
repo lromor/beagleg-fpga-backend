@@ -1,14 +1,14 @@
 PCF?=tinyfpga-bx.pcf
 PNRFLAGS?=--lp8k --package cm81
 
-TARGET=BeagleGFPGABackend
-SOURCES=BeagleGFPGABackend.v led-blinker.v fifo.v spi-secondary.v
+TARGET=beagleg-fpga-backend
+SOURCES=beagleg-fpga-backend.v led-blinker.v fifo.v spi-secondary.v
 
 YOSYS?=yosys
 
 all: $(TARGET).bit
 
-BeagleGFPGABackend.json: $(SOURCES)
+beagleg-fpga-backend.json: $(SOURCES)
 	$(YOSYS) -p 'read_verilog -sv $^ ; synth_ice40 -top top -json $@'
 
 # Use **nextpnr** to generate the FPGA configuration.
