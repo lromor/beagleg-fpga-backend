@@ -126,10 +126,11 @@ int main(int argc, char *argv[]) {
 
     SPIHost spi;
     if (!spi.Connect(device, options)) {
-        fprintf(stderr, "Couldn't connect to SPI bus\n");
+        fprintf(stderr, "Couldn't connect to SPI bus %s\n", device);
         return 1;
     }
 
+    printf("Using %s\n", device);
     printf("Assuming\n\tsizeof(MotionSegment) = %d\n\tsizeof(QueueStatus) = %d\n\n",
            (int)sizeof(beagleg::MotionSegment),
            (int)sizeof(beagleg::QueueStatus));
