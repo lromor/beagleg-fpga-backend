@@ -17,54 +17,74 @@ module top (input clk,
   output p7,
   output p8
 );
+
+  localparam integer FIFO_WORD_SIZE = 8;
+  localparam integer FIFO_RECORD_WORDS = 2;
+  localparam integer FIFO_SLOTS = 16;
+
   LedBlinker blinker(.clk(clk),
-                      .led_red(led_red),
-                      .led_green(led_green),
-                      .led_blue(led_blue));
+                     .led_red(led_red),
+                     .led_green(led_green),
+                     .led_blue(led_blue));
 
   // Spi
+  reg [7:0] spi_secondary_data_r;
   wire [7:0] spi_main_data_w;
   wire spi_main_data_ready_w;
 
   // Fifo
+  wire [$clog2(FIFO_SLOTS):0] fifo_size;
   wire fifo_full_w;
   wire fifo_empty_w;
-  wire [7:0] data_out = {p1, p2, p3, p4, p5, p6, p7, p8};
+  wire fifo_write_en;
 
-  // Depleting test
-  reg deplete_r = 1'b0;
-  reg [15:0] fifo_out;
-
-  assign data_out = fifo_out[7:0];
+  // FSM
+  reg [2:0] state = 0;  // 0: IDLE, 1: FEEDING_FIFO_OP
+  assign spi_secondary_data_w = (state == 3'b000) ? fifo_size : spi_secondary_data_r;
+  assign fifo_write_en = (state == 3'b001) ? spi_main_data_ready_w : 0;
 
   // Use the fifo as buffer for the data collected
   // from the spi.
-  Fifo #(.WORD_SIZE(8),
-         .RECORD_WORDS(2),
-         .SLOTS(16)) fifo(.clk(clk),
-                          // Write stuff
-                          .write_en(spi_main_data_ready_w),
-                          .data_in(spi_main_data_w),
-                          // Status
-                          .full(fifo_full_w),
-                          .empty(fifo_empty_w),
-                          // Read stuff
-                          .read_en(deplete_r),
-                          .data_out(fifo_out));
+  Fifo #(.WORD_SIZE(FIFO_WORD_SIZE),
+         .RECORD_WORDS(FIFO_RECORD_WORDS),
+         .SLOTS(FIFO_SLOTS)) fifo(.clk(clk),
+                                  .size(fifo_size),
+                                  // Write stuff
+                                  .write_en(fifo_write_en),
+                                  .data_in(spi_main_data_w),
+                                  // Status
+                                  .full(fifo_full_w),
+                                  .empty(fifo_empty_w),
+                                  // Read stuff
+                                  .read_en(deplete_r),
+                                  .data_out(fifo_out));
 
   SpiSecondary spi_secondary(.clk(clk),
                              .sck(spi_sck),
                              .in_bit(spi_mosi),
+                             .out_bit(spi_miso),
+                             .cs(spi_cs),
                              .data_word_received(spi_main_data_w),
+                             .data_word_to_send(spi_secondary_data_w),
                              .word_ready(spi_main_data_ready_w));
 
-  // Whenever it's full, deplete it in data_out.
   always @(posedge clk) begin
-    if (fifo_full_w) deplete_r <= 1'b1;
+    if (spi_main_data_ready_w & (spi_cs == 0))
+      case (state)
+        3'b000: begin
+          // Read op
+          case (spi_main_data_w)
+            8'b00000000: state <= 3'b000;  // No-op
+            8'b00000002: state <= 3'b001;  // Send next record to fifo.
+          endcase  // case (spi_main_data_w)
+        end
+        3'b001: begin
+          // Feeding to fifo. Do nothing?
+        end
+        default: state <= 3'b000;  // Do nothing
+      endcase
 
-    if (deplete_r) begin
-      if (fifo_empty_w) deplete_r <= 0;
-    end
+    // Reset the fsm state to idle.
+    if (spi_cs) state <= 0;
   end
-
 endmodule
