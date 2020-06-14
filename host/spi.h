@@ -19,9 +19,12 @@ public:
     // Connect to given device, e.g. "/dev/spidev0.0".
     bool Connect(const char *device, const Options &options);
 
-    // Send string with, put received data in miso.
-    bool Transfer(std::string &mosi, std::string *miso);
+    // Transfer buffer to send, receive it into "receive" buffer. Both buffers
+    // need to have the right siz.e
+    bool TransferBuffer(const char *send, char *receive, size_t len);
 
+    // Convenience version of method above
+    bool TransferString(std::string &send, std::string *receive);
 private:
     int fd_;
     struct Options options_;

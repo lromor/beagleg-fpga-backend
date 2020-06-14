@@ -48,17 +48,21 @@ bool SPIHost::Connect(const char *device, const Options &set_options) {
 }
 
 
-bool SPIHost::Transfer(std::string &mosi, std::string *miso) {
-    miso->resize(mosi.length());  // Make sure we have space for byte to be expected.
-    struct spi_ioc_transfer tr = {
-        .tx_buf = (unsigned long)mosi.data(),
-        .rx_buf = (unsigned long)&miso->front(),
-        .len = (uint32_t) mosi.length(),
-        .speed_hz = options_.speed_hz,
-        .delay_usecs = 0,
-        .bits_per_word = options_.bits_per_word,
-        .cs_change = 1,   // Want one transfer per chip-select
-    };
+
+bool SPIHost::TransferString(std::string &send, std::string *receive) {
+    receive->resize(send.length());  // Make sure we have space for byte to be expected.
+    return TransferBuffer(send.data(), &receive->front(), send.length());
+}
+
+bool SPIHost::TransferBuffer(const char *send, char *receive, size_t len) {
+    struct spi_ioc_transfer tr = {};
+    tr.tx_buf = (unsigned long)send;
+    tr.rx_buf = (unsigned long)receive;
+    tr.len = (uint32_t) len;
+    tr.speed_hz = options_.speed_hz;
+    tr.delay_usecs = 0;
+    tr.bits_per_word = options_.bits_per_word;
+    tr.cs_change = 1;   // Want one transfer per chip-select
 
     if (options_.mode & SPI_TX_QUAD)
         tr.tx_nbits = 4;
