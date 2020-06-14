@@ -19,7 +19,7 @@ module top (input clk,
 );
 
   localparam integer FIFO_WORD_SIZE = 8;
-  localparam integer FIFO_RECORD_WORDS = 2;
+  localparam integer FIFO_RECORD_WORDS = 4;
   localparam integer FIFO_SLOTS = 16;
 
   LedBlinker blinker(.clk(clk),
@@ -75,7 +75,7 @@ module top (input clk,
           // Read op
           case (spi_main_data_w)
             8'b00000000: state <= 3'b000;  // No-op
-            8'b00000002: state <= 3'b001;  // Send next record to fifo.
+            8'b00000010: state <= 3'b001;  // Send next record to fifo.
           endcase  // case (spi_main_data_w)
         end
         3'b001: begin
