@@ -89,7 +89,7 @@ public:
     // Get queue status. Also return number of free slots.
     int GetQueueStatus(beagleg::QueueStatus *status) {
         const size_t tx_len = 1 + sizeof(beagleg::QueueStatus);
-        char tx_buffer[tx_len];
+        char tx_buffer[tx_len] = {};
         char rx_buffer[tx_len];
         tx_buffer[0] = CMD_STATUS;
         spi_channel_->TransferBuffer(tx_buffer, rx_buffer, tx_len);

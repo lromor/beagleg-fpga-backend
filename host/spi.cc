@@ -15,13 +15,16 @@ static bool io_problem(const char *msg) {
 }
 
 static void hex_dump(const void *src, size_t length, size_t line_size, const char *prefix) {
-    if (!src) return;
     int i = 0;
     const unsigned char *address = (const unsigned char*) src;
     const unsigned char *line = address;
     unsigned char c;
 
     printf("%s | ", prefix);
+    if (!src) {
+        printf("(ignored)\n");
+        return;
+    }
     while (length-- > 0) {
         printf("%02X ", *address++);
         if (!(++i % line_size) || (length == 0 && i % line_size)) {
