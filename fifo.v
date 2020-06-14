@@ -10,8 +10,8 @@ module Fifo #(
     parameter integer SLOTS = 8,  // Number of records, should be a power of 2
     localparam integer RECORD_SIZE_BITS = WORD_SIZE * RECORD_WORDS,
     localparam integer STORAGE_SIZE = SLOTS * RECORD_WORDS,
-    localparam integer STORAGE_POS_SIZE = $clog2(STORAGE_SIZE),
-    localparam integer RECORD_POS_SIZE = $clog2(RECORD_WORDS)
+    localparam integer STORAGE_POS_SIZE = $clog2 (STORAGE_SIZE),
+    localparam integer RECORD_POS_SIZE = $clog2 (RECORD_WORDS)
 ) (
    input logic clk, // Input clock
    input logic write_en, // Write data in on rising

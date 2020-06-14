@@ -18,9 +18,9 @@ module top (input clk,
   output p8
 );
 
-  localparam FIFO_WORD_SIZE 8;
-  localparam FIFO_RECORD_WORDS 2;
-  localparam FIFO_SLOTS 16;
+  localparam integer FIFO_WORD_SIZE = 8;
+  localparam integer FIFO_RECORD_WORDS = 2;
+  localparam integer FIFO_SLOTS = 16;
 
   LedBlinker blinker(.clk(clk),
                      .led_red(led_red),
@@ -31,8 +31,6 @@ module top (input clk,
   reg [7:0] spi_secondary_data_r;
   wire [7:0] spi_main_data_w;
   wire spi_main_data_ready_w;
-  wire spi_secondary_data_w = spi_secondary_data_r;
-
 
   // Fifo
   wire [$clog2(FIFO_SLOTS):0] fifo_size;
@@ -41,11 +39,9 @@ module top (input clk,
   wire fifo_write_en;
 
   // FSM
-  reg op = 1'b0;
-  reg state = 0;
-
-  assign spi_secondary_data_w = (op == 0) & fifo_size;
-  assign fifo_write_en = (op == 1) & spi_main_data_ready_w;
+  reg [2:0] state = 0;  // 0: IDLE, 1: FEEDING_FIFO_OP
+  assign spi_secondary_data_w = (state == 3'b000) ? fifo_size : spi_secondary_data_r;
+  assign fifo_write_en = (state == 3'b001) ? spi_main_data_ready_w : 0;
 
   // Use the fifo as buffer for the data collected
   // from the spi.
@@ -67,10 +63,28 @@ module top (input clk,
                              .sck(spi_sck),
                              .in_bit(spi_mosi),
                              .out_bit(spi_miso),
+                             .cs(spi_cs),
                              .data_word_received(spi_main_data_w),
                              .data_word_to_send(spi_secondary_data_w),
                              .word_ready(spi_main_data_ready_w));
 
-  end
+  always @(posedge clk) begin
+    if (spi_main_data_ready_w & (spi_cs == 0))
+      case (state)
+        3'b000: begin
+          // Read op
+          case (spi_main_data_w)
+            8'b00000000: state <= 3'b000;  // No-op
+            8'b00000001: state <= 3'b001;  // Send next record to fifo.
+          endcase  // case (spi_main_data_w)
+        end
+        3'b001: begin
+          // Feeding to fifo. Do nothing?
+        end
+        default: state <= 3'b000;  // Do nothing
+      endcase
 
+    // Reset the fsm state to idle.
+    if (spi_cs) state <= 0;
+  end
 endmodule
