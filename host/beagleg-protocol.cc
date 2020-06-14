@@ -82,7 +82,8 @@ public:
         const char cmd = CMD_NO_OP;
         char val;
         spi_channel_->TransferBuffer(&cmd, &val, 1);
-        return val;
+        // Right now, it retuns number of elements in the fifo, not free slots.
+        return FIFO_SLOTS - val;
     }
 
     // Get queue status. Also return number of free slots.
@@ -93,13 +94,15 @@ public:
         tx_buffer[0] = CMD_STATUS;
         spi_channel_->TransferBuffer(tx_buffer, rx_buffer, tx_len);
         memcpy(status, rx_buffer + 1, sizeof(*status));
-        return rx_buffer[0];
+        // Right now, it retuns number of elements in the fifo, not free slots.
+        return FIFO_SLOTS - rx_buffer[0];
     }
 
     // Attempts to send motion segments. Only sends amount possible.
     int SendMotionSegments(beagleg::MotionSegment *segments, int count) {
         // First determine how many free slots we have to write to.
         // TODO: use is_last_in_transaction to do this in one go.
+        fprintf(stderr, "Get free slots\n");
         const int free_slots = GetFreeSlots();
         if (free_slots < count) {
             fprintf(stderr, "Available fifo space of %d < requested %d\n",
@@ -110,11 +113,12 @@ public:
 
         const int tx_count = std::min(free_slots, count);
         const int segment_byte_len = tx_count * sizeof(beagleg::MotionSegment);
+        fprintf(stderr, "Sending data; %d elements = %d bytes\n", tx_count, segment_byte_len);
         char tx_buffer[1 + segment_byte_len];
         tx_buffer[0] = CMD_WRITE_FIFO;
         // TODO: can we do this without copy first ?
         memcpy(tx_buffer + 1, segments, segment_byte_len);
-        if (!spi_channel_->TransferBuffer(segments, nullptr, 1 + segment_byte_len))
+        if (!spi_channel_->TransferBuffer(tx_buffer, nullptr, 1 + segment_byte_len))
             return -1;
         return tx_count;
     }
@@ -148,6 +152,7 @@ int main(int argc, char *argv[]) {
     SPIHost::Options options;
     options.bits_per_word = 8;
     options.speed_hz = 500'000;  // Let's be slow for now
+    options.verbose = true;
 
     SPIHost spi;
     if (!spi.Connect(device, options)) {

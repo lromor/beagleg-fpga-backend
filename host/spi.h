@@ -12,6 +12,7 @@ public:
         uint32_t mode;
         uint8_t bits_per_word = 8;
         uint32_t speed_hz = 500000;
+        bool verbose = false;
     };
 
     SPIHost() : fd_(-1) {}
