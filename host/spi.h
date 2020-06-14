@@ -15,16 +15,17 @@ public:
     };
 
     SPIHost() : fd_(-1) {}
+    ~SPIHost();
 
     // Connect to given device, e.g. "/dev/spidev0.0".
     bool Connect(const char *device, const Options &options);
 
     // Transfer buffer to send, receive it into "receive" buffer. Both buffers
-    // need to have the right siz.e
-    bool TransferBuffer(const char *send, char *receive, size_t len);
+    // need to have the right size.
+    // If is_last_in_transaction is false, keeps the CS low.
+    bool TransferBuffer(const void *send, void *receive, size_t len,
+                        bool is_last_in_transaction = true);
 
-    // Convenience version of method above
-    bool TransferString(std::string &send, std::string *receive);
 private:
     int fd_;
     struct Options options_;

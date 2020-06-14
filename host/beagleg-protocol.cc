@@ -7,6 +7,8 @@
 #include <string.h>
 #include <getopt.h>
 
+#include <algorithm>
+
 // The protocol elements. Right now just pretend
 namespace beagleg {
 struct MotionSegment {
@@ -31,10 +33,10 @@ static constexpr int FIFO_SLOTS = 16;
 
 // This needs to be in-sync with FPGA impl.
 enum Command {
-    CMD_NO_OP = 0x00,  // Just send one byte to receive fifo free
-    CMD_STATUS = 0x01, // Send 5 bytes, receive fifo free + status word
-    CMD_WRITE = 0x02,
-    CMD_READ = 0x03,
+    CMD_NO_OP      = 0x00,  // Just send one byte to receive fifo free
+    CMD_STATUS     = 0x01, // Send 5 bytes, receive fifo free + status word
+    CMD_WRITE_FIFO = 0x02,
+    CMD_READ_FIFO  = 0x03,
 };
 
 // Put terminal in canonical mode, read chars.
@@ -94,6 +96,29 @@ public:
         return rx_buffer[0];
     }
 
+    // Attempts to send motion segments. Only sends amount possible.
+    int SendMotionSegments(beagleg::MotionSegment *segments, int count) {
+        // First determine how many free slots we have to write to.
+        // TODO: use is_last_in_transaction to do this in one go.
+        const int free_slots = GetFreeSlots();
+        if (free_slots < count) {
+            fprintf(stderr, "Available fifo space of %d < requested %d\n",
+                    free_slots, count);
+        }
+        if (free_slots == 0)
+            return 0;
+
+        const int tx_count = std::min(free_slots, count);
+        const int segment_byte_len = tx_count * sizeof(beagleg::MotionSegment);
+        char tx_buffer[1 + segment_byte_len];
+        tx_buffer[0] = CMD_WRITE_FIFO;
+        // TODO: can we do this without copy first ?
+        memcpy(tx_buffer + 1, segments, segment_byte_len);
+        if (!spi_channel_->TransferBuffer(segments, nullptr, 1 + segment_byte_len))
+            return -1;
+        return tx_count;
+    }
+
 private:
     SPIHost *const spi_channel_;
 };
@@ -138,18 +163,23 @@ int main(int argc, char *argv[]) {
     printf("User interaction:\n"
            "\tf    - no-op. Just read fifo free slots\n"
            "\ts    - read status word (fifo free + status)\n"
+           "\tw    - write a motion segment to fifo\n"
            "\tESC  - quit\n"
         );
 
-    beagleg::QueueStatus status = {};
+    beagleg::MotionSegment dummy_segment;
+    dummy_segment.count_steps = 42;
+
+    beagleg::QueueStatus status;
     BeagleGSPIProtocol protocol(&spi);
     TerminalInput terminal;
 
     for (;;) {
-        fprintf(stderr, "------[ f: free-slots, s: status; ESC: quit] ------------------\n");
+        fprintf(stderr, "------[ f: free-slots, s: status; w: write ESC: quit] --------------\n");
         const char key = terminal.read_char();
         switch (key) {
         case 'f':
+        case ' ':   // Also space key is a wonderful way to send no-op.
             print_free_slots(protocol.GetFreeSlots());
             break;
 
@@ -158,8 +188,14 @@ int main(int argc, char *argv[]) {
             print_status(status);
             break;
 
+        case 'w':
+            printf("Wrote %d segments\n",
+                   protocol.SendMotionSegments(&dummy_segment, 1));
+            break;
+
         case 'q':
         case 'Q':
+        case 0x04:  // Ctrl-D
         case 0x1b:  // Escape
             fprintf(stderr, "Signing off; Have a wonderful day!\n");
             return 0;

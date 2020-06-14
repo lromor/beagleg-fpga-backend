@@ -14,6 +14,8 @@ static bool io_problem(const char *msg) {
     return false;
 }
 
+SPIHost::~SPIHost() { close(fd_); }
+
 bool SPIHost::Connect(const char *device, const Options &set_options) {
     if (fd_ >= 0)
         close(fd_);  // Was already open.
@@ -48,13 +50,8 @@ bool SPIHost::Connect(const char *device, const Options &set_options) {
 }
 
 
-
-bool SPIHost::TransferString(std::string &send, std::string *receive) {
-    receive->resize(send.length());  // Make sure we have space for byte to be expected.
-    return TransferBuffer(send.data(), &receive->front(), send.length());
-}
-
-bool SPIHost::TransferBuffer(const char *send, char *receive, size_t len) {
+bool SPIHost::TransferBuffer(const void *send, void *receive, size_t len,
+                             bool is_last_in_transaction) {
     struct spi_ioc_transfer tr = {};
     tr.tx_buf = (unsigned long)send;
     tr.rx_buf = (unsigned long)receive;
@@ -62,7 +59,7 @@ bool SPIHost::TransferBuffer(const char *send, char *receive, size_t len) {
     tr.speed_hz = options_.speed_hz;
     tr.delay_usecs = 0;
     tr.bits_per_word = options_.bits_per_word;
-    tr.cs_change = 1;   // Want one transfer per chip-select
+    tr.cs_change = is_last_in_transaction ? 1 : 0;
 
     if (options_.mode & SPI_TX_QUAD)
         tr.tx_nbits = 4;
