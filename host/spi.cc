@@ -106,8 +106,8 @@ bool SPIHost::TransferBuffer(const void *send, void *receive, size_t len,
     if (ioctl(fd_, SPI_IOC_MESSAGE(1), &tr) < 0)
         return io_problem("Sending SPI message");
     if (options_.verbose) {
-        hex_dump(send, len, len, "RX");
-        hex_dump(receive, len, len, "TX");
+        hex_dump(send, len, len, "TX");
+        hex_dump(receive, len, len, "RX");
     }
     return true;
 }
