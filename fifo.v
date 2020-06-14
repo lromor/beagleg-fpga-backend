@@ -7,28 +7,28 @@
 module Fifo #(
     parameter integer WORD_SIZE = 8,
     parameter integer RECORD_WORDS = 16,  // Number of inputs required to make a record.
-    parameter integer SLOTS = 8  // Number of records, should be a power of 2
+    parameter integer SLOTS = 8,  // Number of records, should be a power of 2
+    localparam integer RECORD_SIZE_BITS = WORD_SIZE * RECORD_WORDS,
+    localparam integer STORAGE_SIZE = SLOTS * RECORD_WORDS,
+    localparam integer STORAGE_POS_SIZE = $clog2(STORAGE_SIZE),
+    localparam integer RECORD_POS_SIZE = $clog2(RECORD_WORDS)
 ) (
    input logic clk, // Input clock
    input logic write_en, // Write data in on rising
-   input wire [WORD_SIZE-1:0] data_in, // Input do the fifo
+   input wire [WORD_SIZE-1:0] data_in, // Input to the fifo
    input logic read_en, // Read on rising
+   output wire [STORAGE_POS_SIZE:0] size, // Size of fifo in words
    output logic full, // Rises when fifo is full
    output logic empty, // Rises when fifo is empty
-   output [RECORD_WORDS*WORD_SIZE-1:0] data_out // Output data when reading
+   output [RECORD_SIZE_BITS-1:0] data_out // Output data when reading
 );
-  localparam integer RECORD_SIZE_BITS = WORD_SIZE * RECORD_WORDS;
-  localparam integer STORAGE_SIZE = SLOTS * RECORD_WORDS;
-  localparam integer STORAGE_POS_SIZE = $clog2(STORAGE_SIZE);
-  localparam integer RECORD_POS_SIZE = $clog2(RECORD_WORDS);
-
   reg [WORD_SIZE-1:0] storage[STORAGE_SIZE-1:0];
 
   // One bit more for the position for the size representation.
   reg [STORAGE_POS_SIZE:0] write_pos_r = 0;
   reg [STORAGE_POS_SIZE:0] read_pos_r = 0;
 
-  wire [STORAGE_POS_SIZE:0] size = write_pos_r - read_pos_r;
+  assign size = write_pos_r - read_pos_r;
 
   // The wires of the read/write positions are a bit less because we use
   // it as indexes for the storage and they need the proper modular arithmetic.
