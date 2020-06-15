@@ -82,24 +82,26 @@ public:
         const char cmd = CMD_NO_OP;
         char val;
         spi_channel_->TransferBuffer(&cmd, &val, 1);
-        return val;
+        return free_slots_from_first_byte(val);
     }
 
     // Get queue status. Also return number of free slots.
     int GetQueueStatus(beagleg::QueueStatus *status) {
         const size_t tx_len = 1 + sizeof(beagleg::QueueStatus);
-        char tx_buffer[tx_len];
+        char tx_buffer[tx_len] = {};
         char rx_buffer[tx_len];
         tx_buffer[0] = CMD_STATUS;
         spi_channel_->TransferBuffer(tx_buffer, rx_buffer, tx_len);
         memcpy(status, rx_buffer + 1, sizeof(*status));
-        return rx_buffer[0];
+        return free_slots_from_first_byte(rx_buffer[0]);
     }
 
     // Attempts to send motion segments. Only sends amount possible.
+    // Returns number of segments sent.
     int SendMotionSegments(beagleg::MotionSegment *segments, int count) {
         // First determine how many free slots we have to write to.
         // TODO: use is_last_in_transaction to do this in one go.
+        fprintf(stderr, "Get free slots\n");
         const int free_slots = GetFreeSlots();
         if (free_slots < count) {
             fprintf(stderr, "Available fifo space of %d < requested %d\n",
@@ -110,28 +112,34 @@ public:
 
         const int tx_count = std::min(free_slots, count);
         const int segment_byte_len = tx_count * sizeof(beagleg::MotionSegment);
+        fprintf(stderr, "Sending data; %d elements = %d bytes\n", tx_count, segment_byte_len);
         char tx_buffer[1 + segment_byte_len];
         tx_buffer[0] = CMD_WRITE_FIFO;
         // TODO: can we do this without copy first ?
         memcpy(tx_buffer + 1, segments, segment_byte_len);
-        if (!spi_channel_->TransferBuffer(segments, nullptr, 1 + segment_byte_len))
+        if (!spi_channel_->TransferBuffer(tx_buffer, nullptr, 1 + segment_byte_len))
             return -1;
         return tx_count;
     }
 
 private:
+    static int free_slots_from_first_byte(uint8_t b) {
+        // Right now, the FPGA returns the total number of used
+        // slots not free slots.
+        return FIFO_SLOTS - b;
+    }
+
     SPIHost *const spi_channel_;
 };
 
+
 static void print_free_slots(int slots) {
-    printf("Free slots: %d\n", slots);
+    printf("Free slots:%d\n", slots);
 }
 
 static void print_status(const beagleg::QueueStatus &status) {
-    printf("Status: counter:%d; index:%d ", status.counter, status.index);
-    const char *raw = (const char *) &status;
-    printf("[0x%02x 0x%02x 0x%02x 0x%02x]\n", raw[0], raw[1], raw[2], raw[3]);
-}
+    printf("Status: counter:%d; index:%d\n", status.counter, status.index);
+ }
 
 int main(int argc, char *argv[]) {
     const char *device = "/dev/spidev0.0";
@@ -148,6 +156,7 @@ int main(int argc, char *argv[]) {
     SPIHost::Options options;
     options.bits_per_word = 8;
     options.speed_hz = 500'000;  // Let's be slow for now
+    options.verbose = true;
 
     SPIHost spi;
     if (!spi.Connect(device, options)) {

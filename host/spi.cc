@@ -14,6 +14,36 @@ static bool io_problem(const char *msg) {
     return false;
 }
 
+static void hex_dump(const void *src, size_t length, size_t line_size, const char *prefix) {
+    int i = 0;
+    const unsigned char *address = (const unsigned char*) src;
+    const unsigned char *line = address;
+    unsigned char c;
+
+    printf("%s | ", prefix);
+    if (!src) {
+        printf("(ignored)\n");
+        return;
+    }
+    while (length-- > 0) {
+        printf("%02X ", *address++);
+        if (!(++i % line_size) || (length == 0 && i % line_size)) {
+            if (length == 0) {
+                while (i++ % line_size)
+                    printf("__ ");
+            }
+            printf(" | ");  /* right close */
+            while (line < address) {
+                c = *line++;
+                printf("%c", (c < 33 || c == 255) ? 0x2E : c);
+            }
+            printf("\n");
+            if (length > 0)
+                printf("%s | ", prefix);
+        }
+    }
+}
+
 SPIHost::~SPIHost() { close(fd_); }
 
 bool SPIHost::Connect(const char *device, const Options &set_options) {
@@ -59,7 +89,7 @@ bool SPIHost::TransferBuffer(const void *send, void *receive, size_t len,
     tr.speed_hz = options_.speed_hz;
     tr.delay_usecs = 0;
     tr.bits_per_word = options_.bits_per_word;
-    tr.cs_change = is_last_in_transaction ? 1 : 0;
+    tr.cs_change = is_last_in_transaction ? 0 : 1;
 
     if (options_.mode & SPI_TX_QUAD)
         tr.tx_nbits = 4;
@@ -76,7 +106,11 @@ bool SPIHost::TransferBuffer(const void *send, void *receive, size_t len,
             tr.tx_buf = 0;
     }
 
-    int ret = ioctl(fd_, SPI_IOC_MESSAGE(1), &tr);
-    if (ret < 0) return io_problem("Sending SPI message");
+    if (ioctl(fd_, SPI_IOC_MESSAGE(1), &tr) < 0)
+        return io_problem("Sending SPI message");
+    if (options_.verbose) {
+        hex_dump(send, len, len, "TX");
+        hex_dump(receive, len, len, "RX");
+    }
     return true;
 }
