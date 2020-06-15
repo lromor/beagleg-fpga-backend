@@ -42,11 +42,11 @@ module SpiSecondary #(
 
 
     if (rising) begin
-      // Set msb to output
-      out_bit <= data[WORD_BITS-1];
-
       // Shift data_word received by one bit and include the new bit.
       data <= {data[WORD_BITS-2:0], in_bit};
+
+      // Set msb to output
+      out_bit <= data[WORD_BITS-2];
 
       // Increment the counter
       counter <= counter + 1;

@@ -31,6 +31,7 @@ module top (input clk,
   reg [7:0] spi_secondary_data_r;
   wire [7:0] spi_main_data_w;
   wire spi_main_data_ready_w;
+  wire [7:0] spi_secondary_data_w;
 
   // Fifo
   wire [$clog2(FIFO_SLOTS):0] fifo_size;
@@ -40,8 +41,10 @@ module top (input clk,
 
   // FSM
   reg [2:0] state = 0;  // 0: IDLE, 1: FEEDING_FIFO_OP
-  assign spi_secondary_data_w = (state == 3'b000) ? fifo_size : spi_secondary_data_r;
+  assign spi_secondary_data_w = (state == 3'b000) ? fifo_size >> $clog2(FIFO_RECORD_WORDS) : 8'b00000000;
   assign fifo_write_en = (state == 3'b001) ? spi_main_data_ready_w : 0;
+
+  wire [7:0] debug = {p8, p7, p6, p5, p4, p3, p2, p1};
 
   // Use the fifo as buffer for the data collected
   // from the spi.
@@ -69,13 +72,16 @@ module top (input clk,
                              .word_ready(spi_main_data_ready_w));
 
   always @(posedge clk) begin
+    debug <= spi_secondary_data_w;
     if (spi_main_data_ready_w & (spi_cs == 0))
       case (state)
         3'b000: begin
           // Read op
           case (spi_main_data_w)
             8'b00000000: state <= 3'b000;  // No-op
-            8'b00000010: state <= 3'b001;  // Send next record to fifo.
+            8'b00000010: begin
+              state <= 3'b001;  // Send next record to fifo.
+            end
           endcase  // case (spi_main_data_w)
         end
         3'b001: begin
