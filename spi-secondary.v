@@ -32,14 +32,21 @@ module SpiSecondary #(
 
   // Shift register.
   always @(posedge clk) begin
-    if (cs) data <= data_word_to_send;
+    if (cs)
+      begin
+        data <= data_word_to_send;
+
+        // Last bit!
+        out_bit <= data_word_to_send[WORD_BITS-1];
+      end
+
 
     if (rising) begin
       // Set msb to output
-      out_bit <= data[WORD_BITS];
+      out_bit <= data[WORD_BITS-1];
 
       // Shift data_word received by one bit and include the new bit.
-      data <= {data_received[WORD_BITS - 1:0], in_bit};
+      data <= {data[WORD_BITS-2:0], in_bit};
 
       // Increment the counter
       counter <= counter + 1;
