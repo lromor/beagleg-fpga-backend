@@ -9,7 +9,7 @@ YOSYS?=yosys
 all: $(TARGET).bit
 
 beagleg-fpga-backend.json: $(SOURCES)
-	$(YOSYS) -p 'read_verilog -sv $^ ; synth_ice40 -top top -json $@'
+	$(YOSYS) -p 'read_verilog -sv $^ ; synth_ice40 -top top -json $@' 2>&1 | egrep -i "(warning|error)"
 
 # Use **nextpnr** to generate the FPGA configuration.
 # This is called the **place** and **route** step.
