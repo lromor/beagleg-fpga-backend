@@ -82,8 +82,7 @@ public:
         const char cmd = CMD_NO_OP;
         char val;
         spi_channel_->TransferBuffer(&cmd, &val, 1);
-        // Right now, it retuns number of elements in the fifo, not free slots.
-        return FIFO_SLOTS - val;
+        return free_slots_from_first_byte(val);
     }
 
     // Get queue status. Also return number of free slots.
@@ -94,11 +93,11 @@ public:
         tx_buffer[0] = CMD_STATUS;
         spi_channel_->TransferBuffer(tx_buffer, rx_buffer, tx_len);
         memcpy(status, rx_buffer + 1, sizeof(*status));
-        // Right now, it retuns number of elements in the fifo, not free slots.
-        return FIFO_SLOTS - rx_buffer[0];
+        return free_slots_from_first_byte(rx_buffer[0]);
     }
 
     // Attempts to send motion segments. Only sends amount possible.
+    // Returns number of segments sent.
     int SendMotionSegments(beagleg::MotionSegment *segments, int count) {
         // First determine how many free slots we have to write to.
         // TODO: use is_last_in_transaction to do this in one go.
@@ -124,8 +123,15 @@ public:
     }
 
 private:
+    static int free_slots_from_first_byte(uint8_t b) {
+        // Right now, the FPGA returns the total number of used
+        // slots not free slots.
+        return FIFO_SLOTS - b;
+    }
+
     SPIHost *const spi_channel_;
 };
+
 
 static void print_free_slots(int slots) {
     printf("Free slots:%d\n", slots);
