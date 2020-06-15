@@ -128,14 +128,12 @@ private:
 };
 
 static void print_free_slots(int slots) {
-    printf("Free slots: %d\n", slots);
+    printf("Free slots:%d\n", slots);
 }
 
 static void print_status(const beagleg::QueueStatus &status) {
-    printf("Status: counter:%d; index:%d ", status.counter, status.index);
-    const char *raw = (const char *) &status;
-    printf("[0x%02x 0x%02x 0x%02x 0x%02x]\n", raw[0], raw[1], raw[2], raw[3]);
-}
+    printf("Status: counter:%d; index:%d\n", status.counter, status.index);
+ }
 
 int main(int argc, char *argv[]) {
     const char *device = "/dev/spidev0.0";
