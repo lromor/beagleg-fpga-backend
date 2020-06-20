@@ -13,14 +13,14 @@ module Fifo #(
     localparam integer STORAGE_POS_SIZE = $clog2 (STORAGE_SIZE),
     localparam integer RECORD_POS_SIZE = $clog2 (RECORD_WORDS)
 ) (
-   input logic clk, // Input clock
-   input logic write_en, // Write data in on rising
-   input wire [WORD_SIZE-1:0] data_in, // Input to the fifo
-   input logic read_en, // Read on rising
-   output wire [STORAGE_POS_SIZE:0] size, // Size of fifo in words
-   output logic full, // Rises when fifo is full
-   output logic empty, // Rises when fifo is empty
-   output [RECORD_SIZE_BITS-1:0] data_out // Output data when reading
+    input  logic                        clk,  // Input clock
+    input  logic                        write_en,  // Write data in on rising
+    input  wire  [       WORD_SIZE-1:0] data_in,  // Input to the fifo
+    input  logic                        read_en,  // Read on rising
+    output wire  [  STORAGE_POS_SIZE:0] size,  // Size of fifo in words
+    output logic                        full,  // Rises when fifo is full
+    output logic                        empty,  // Rises when fifo is empty
+    output       [RECORD_SIZE_BITS-1:0] data_out  // Output data when reading
 );
   reg [WORD_SIZE-1:0] storage[STORAGE_SIZE-1:0];
 

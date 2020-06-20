@@ -1,8 +1,10 @@
 // Purely testing LED blinking right now :)
-module LedBlinker (input clk,
-		   output led_red,
-		   output led_green,
-		   output led_blue);
+module LedBlinker (
+    input  clk,
+    output led_red,
+    output led_green,
+    output led_blue
+);
 
   reg [24:0] prescaler;
   always @(posedge clk) begin

@@ -1,21 +1,22 @@
 // Should this file be called 'top.v' ?
 
-module top (input clk,
-  output led_red,
-  output led_green,
-  output led_blue,
-  input spi_mosi,
-  input spi_sck,
-  input spi_cs,
-  output spi_miso,
-  output p1,
-  output p2,
-  output p3,
-  output p4,
-  output p5,
-  output p6,
-  output p7,
-  output p8
+module top (
+    input  clk,
+    output led_red,
+    output led_green,
+    output led_blue,
+    input  spi_mosi,
+    input  spi_sck,
+    input  spi_cs,
+    output spi_miso,
+    output p1,
+    output p2,
+    output p3,
+    output p4,
+    output p5,
+    output p6,
+    output p7,
+    output p8
 );
 
   localparam integer FIFO_WORD_SIZE = 8;
@@ -41,7 +42,8 @@ module top (input clk,
 
   // FSM
   reg [2:0] state = 0;  // 0: IDLE, 1: FEEDING_FIFO_OP
-  assign spi_secondary_data_w = (state == 3'b000) ? fifo_size >> $clog2(FIFO_RECORD_WORDS) : 8'b00000000;
+  assign spi_secondary_data_w = (state == 3'b000) ? fifo_size >> $clog2(FIFO_RECORD_WORDS) :
+      8'b00000000;
   assign fifo_write_en = (state == 3'b001) ? spi_main_data_ready_w : 0;
 
   wire [7:0] debug = {p8, p7, p6, p5, p4, p3, p2, p1};

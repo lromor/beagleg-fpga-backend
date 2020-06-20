@@ -25,11 +25,12 @@ flash: $(TARGET).bit
 	tinyprog -p $<
 
 # needs https://github.com/google/verible
+# (a somewhat recent version, as the binary name changed)
 format: $(SOURCES)
-	verilog_format --inplace $^
+	verible-verilog-format --inplace $^
 
 lint: $(SOURCES)
-	verilog_lint $^
+	verible-verilog-lint $^
 
 clean:
 	rm -rf $(TARGET).dfu $(TARGET).bit $(TARGET).asc $(TARGET).json
