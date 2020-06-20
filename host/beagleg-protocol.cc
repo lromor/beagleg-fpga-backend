@@ -101,7 +101,7 @@ public:
     int SendMotionSegments(beagleg::MotionSegment *segments, int count) {
         // First determine how many free slots we have to write to.
         // TODO: use is_last_in_transaction to do this in one go.
-        fprintf(stderr, "Get free slots\n");
+        fprintf(stderr, "First: Get free slots.\n");
         const int free_slots = GetFreeSlots();
         if (free_slots < count) {
             fprintf(stderr, "Available fifo space of %d < requested %d\n",
@@ -112,12 +112,13 @@ public:
 
         const int tx_count = std::min(free_slots, count);
         const int segment_byte_len = tx_count * sizeof(beagleg::MotionSegment);
-        fprintf(stderr, "Sending data; %d elements = %d bytes\n", tx_count, segment_byte_len);
+        fprintf(stderr, "Now: Sending actual data; %d elements = %d bytes\n", tx_count, segment_byte_len);
         char tx_buffer[1 + segment_byte_len];
+        char rx_buffer[1 + segment_byte_len];
         tx_buffer[0] = CMD_WRITE_FIFO;
         // TODO: can we do this without copy first ?
         memcpy(tx_buffer + 1, segments, segment_byte_len);
-        if (!spi_channel_->TransferBuffer(tx_buffer, nullptr, 1 + segment_byte_len))
+        if (!spi_channel_->TransferBuffer(tx_buffer, rx_buffer, 1 + segment_byte_len))
             return -1;
         return tx_count;
     }
@@ -139,7 +140,39 @@ static void print_free_slots(int slots) {
 
 static void print_status(const beagleg::QueueStatus &status) {
     printf("Status: counter:%d; index:%d\n", status.counter, status.index);
- }
+}
+
+static void ReadStepsAndWrite(TerminalInput *terminal, BeagleGSPIProtocol *protocol) {
+    printf("How many steps: ");
+    fflush(stdout);
+    char k;
+
+    beagleg::MotionSegment segment;
+    segment.count_steps = 0;
+    while ((k = terminal->read_char()) != '\n') {
+        if (k >= '0' && k <= '9') {
+            write(STDOUT_FILENO, &k, 1);
+            segment.count_steps = segment.count_steps * 10 + (k - '0');
+        } else {
+            k = '\007';  // beep.
+            write(STDOUT_FILENO, &k, 1);
+        }
+    }
+    printf(" \u2713\n");
+    int segments_written = protocol->SendMotionSegments(&segment, 1);
+    if (segments_written) {
+        // Also write it in hex to better see the endianness we send over the wire.
+        printf("Wrote segment with %d steps (that is 0x%02X·%02X·%02X·%02X hex)\n",
+               segment.count_steps,
+               (segment.count_steps >> 24) & 0xFF,
+               (segment.count_steps >> 16) & 0xFF,
+               (segment.count_steps >> 8) & 0xFF,
+               (segment.count_steps >> 0) & 0xFF);
+    } else {
+        printf("Buffer full. Didn't write segment\n");
+    }
+}
+
 
 int main(int argc, char *argv[]) {
     const char *device = "/dev/spidev0.0";
@@ -176,9 +209,6 @@ int main(int argc, char *argv[]) {
            "\tESC  - quit\n"
         );
 
-    beagleg::MotionSegment dummy_segment;
-    dummy_segment.count_steps = 42;
-
     beagleg::QueueStatus status;
     BeagleGSPIProtocol protocol(&spi);
     TerminalInput terminal;
@@ -198,8 +228,7 @@ int main(int argc, char *argv[]) {
             break;
 
         case 'w':
-            printf("Wrote %d segments\n",
-                   protocol.SendMotionSegments(&dummy_segment, 1));
+            ReadStepsAndWrite(&terminal, &protocol);
             break;
 
         case 'q':

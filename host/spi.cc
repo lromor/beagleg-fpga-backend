@@ -22,7 +22,7 @@ static void hex_dump(const void *src, size_t length, size_t line_size, const cha
 
     printf("%s | ", prefix);
     if (!src) {
-        printf("(ignored)\n");
+        printf("\e[1;31m(ignored)\e[0m\n");
         return;
     }
     while (length-- > 0) {
@@ -37,7 +37,7 @@ static void hex_dump(const void *src, size_t length, size_t line_size, const cha
                 c = *line++;
                 printf("%c", (c < 33 || c == 255) ? 0x2E : c);
             }
-            printf("\n");
+            printf("\e[0m\n");
             if (length > 0)
                 printf("%s | ", prefix);
         }
@@ -109,8 +109,8 @@ bool SPIHost::TransferBuffer(const void *send, void *receive, size_t len,
     if (ioctl(fd_, SPI_IOC_MESSAGE(1), &tr) < 0)
         return io_problem("Sending SPI message");
     if (options_.verbose) {
-        hex_dump(send, len, len, "TX");
-        hex_dump(receive, len, len, "RX");
+        hex_dump(send, len, len, "\t\e[1;36mTX");
+        hex_dump(receive, len, len, "\t\e[1;33mRX");
     }
     return true;
 }
