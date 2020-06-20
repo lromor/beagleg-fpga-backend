@@ -107,7 +107,7 @@ public:
             fprintf(stderr, "Available fifo space of %d < requested %d\n",
                     free_slots, count);
         }
-        if (free_slots == 0)
+        if (free_slots <= 0)
             return 0;
 
         const int tx_count = std::min(free_slots, count);
@@ -135,7 +135,7 @@ private:
 
 
 static void print_free_slots(int slots) {
-    printf("Free slots:%d\n", slots);
+    printf("Free slots: %d\n", slots);
 }
 
 static void print_status(const beagleg::QueueStatus &status) {
@@ -209,6 +209,7 @@ int main(int argc, char *argv[]) {
            "\tESC  - quit\n"
         );
 
+    static constexpr char nothing_to_do[] = "¯\\_(ツ)_/¯";
     beagleg::QueueStatus status;
     BeagleGSPIProtocol protocol(&spi);
     TerminalInput terminal;
@@ -239,7 +240,7 @@ int main(int argc, char *argv[]) {
             return 0;
 
         default:
-            fprintf(stderr, "? '%c' (0x%02x)\n", key, key);
+            fprintf(stderr, "input key \e[1;31m0x%02X\e[0m: \e[1;33m%s\e[0m\n", key, nothing_to_do);
         }
     }
 }

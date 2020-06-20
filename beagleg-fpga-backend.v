@@ -35,7 +35,7 @@ module top (
   wire [7:0] spi_secondary_data_w;
 
   // Fifo
-  wire [$clog2(FIFO_SLOTS):0] fifo_size;
+  wire [$clog2(FIFO_SLOTS * FIFO_RECORD_WORDS):0] fifo_size;
   wire fifo_full_w;
   wire fifo_empty_w;
   wire fifo_write_en;
