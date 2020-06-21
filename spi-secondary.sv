@@ -37,7 +37,7 @@ module spi_secondary #(
   assign data_word_received = data;
 
   // Shift register.
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (cs) begin
       data <= data_word_to_send;
 

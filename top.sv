@@ -115,7 +115,7 @@ module top (
             .step_out(system_led));
 
   // The first byte decides what we're going to do.
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (spi_main_data_ready_w & (spi_cs == 0))
       case (state)
         STATE_IDLE: begin

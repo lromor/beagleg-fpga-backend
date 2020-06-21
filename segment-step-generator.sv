@@ -29,7 +29,7 @@ module segment_step_generator #(
     countdown_register = 0;
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     case (state)
       STATE_WAIT: begin
         if (data_available) begin
@@ -41,7 +41,7 @@ module segment_step_generator #(
         end else begin
           data_request <= 1'b0;
           state <= STATE_WAIT;
-          countdown_register = 0;
+          countdown_register <= 0;
         end
       end
 
