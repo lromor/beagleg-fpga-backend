@@ -4,7 +4,6 @@ module top (
     input  clk,
     output led_red,
     output led_green,
-    output led_blue,
     input  spi_mosi,
     input  spi_sck,
     input  spi_cs,
@@ -19,8 +18,10 @@ module top (
     output p8
 );
 
+  typedef logic [31:0] MotionSegment;  // Yosys not supported yet: struct
+
   localparam integer FIFO_WORD_SIZE = 8;
-  localparam integer FIFO_RECORD_WORDS = 4;
+  localparam integer FIFO_RECORD_WORDS = 4;  // Yosys not supported: $bits(MotionSegment) / 8;
   localparam integer FIFO_SLOTS = 16;
 
   typedef enum {
@@ -42,11 +43,6 @@ module top (
     CMD_WRITE_FIFO = 2
   } command_t;
 
-  LedBlinker blinker(.clk(clk),
-                     .led_red(led_red),
-                     .led_green(led_green),
-                     .led_blue(led_blue));
-
   // Spi
   logic [7:0] spi_secondary_data_r;
   wire [7:0] spi_main_data_w;
@@ -63,28 +59,22 @@ module top (
   state_t state;
   initial state = STATE_IDLE;
 
-  assign spi_secondary_data_w = (state == STATE_IDLE) ?
-      FIFO_SLOTS - (fifo_size >> $clog2(FIFO_RECORD_WORDS)) : 8'b00000000;
+  wire [7:0] empty_slots;
+
+  assign empty_slots = FIFO_SLOTS - (fifo_size >> $clog2(FIFO_RECORD_WORDS));
+
+  assign spi_secondary_data_w = (state == STATE_IDLE) ? empty_slots : 8'b00000000;
   assign fifo_write_en = (state == STATE_RECEIVE_SEGMENTS) ? spi_main_data_ready_w : 0;
 
   wire [7:0] debug = {p8, p7, p6, p5, p4, p3, p2, p1};
   assign debug = spi_secondary_data_w;
 
-  // Use the fifo as buffer for the data collected
-  // from the spi.
-  Fifo #(.WORD_SIZE(FIFO_WORD_SIZE),
-         .RECORD_WORDS(FIFO_RECORD_WORDS),
-         .SLOTS(FIFO_SLOTS)) fifo(.clk(clk),
-                                  .size(fifo_size),
-                                  // Write stuff
-                                  .write_en(fifo_write_en),
-                                  .data_in(spi_main_data_w),
-                                  // Status
-                                  .full(fifo_full_w),
-                                  .empty(fifo_empty_w),
-				  // Reading. Not yet.
-				  .read_en(0));
+  // Green when still 4 left, but red when empty.
+  // LED signals are negated, as they are using a common anode.
+  assign led_red = !(empty_slots == 0);
+  assign led_green = !(empty_slots < 4 && empty_slots > 0);
 
+  // Receive commands + data from host
   SpiSecondary spi_secondary(.clk(clk),
                              .sck(spi_sck),
                              .in_bit(spi_mosi),
@@ -94,6 +84,22 @@ module top (
                              .data_word_to_send(spi_secondary_data_w),
                              .word_ready(spi_main_data_ready_w));
 
+  // Motion segments are sent via this fifo to motion engine.
+  Fifo #(.WORD_SIZE(FIFO_WORD_SIZE),
+         .RECORD_WORDS(FIFO_RECORD_WORDS),
+         .SLOTS(FIFO_SLOTS))
+   motion_segment_fifo(.clk(clk),
+                       .size(fifo_size),
+                       // Write stuff
+                       .write_en(fifo_write_en),
+                       .data_in(spi_main_data_w),
+                       // Status
+                       .full(fifo_full_w),
+                       .empty(fifo_empty_w),
+		       // Reading. Not yet.
+		       .read_en(0));
+
+  // The first byte decides what we're going to do.
   always @(posedge clk) begin
     if (spi_main_data_ready_w & (spi_cs == 0))
       case (state)

@@ -2,14 +2,14 @@ PCF?=tinyfpga-bx.pcf
 PNRFLAGS?=--lp8k --package cm81
 
 TARGET=beagleg-fpga-backend
-SOURCES=beagleg-fpga-backend.v led-blinker.v fifo.v spi-secondary.v
+SOURCES=beagleg-fpga-backend.v fifo.v spi-secondary.v
 
 YOSYS?=yosys
 
 all: $(TARGET).bit
 
 beagleg-fpga-backend.json: $(SOURCES)
-	!($(YOSYS) -p 'read_verilog -sv $^ ; synth_ice40 -top top -json $@' 2>&1 | egrep -i "^(warning:|error:)")
+	!($(YOSYS) -p 'read_verilog -sv $^ ; synth_ice40 -top top -json $@' 2>&1 | egrep -i "(^warning:|error:)") || rm $@
 
 # Use **nextpnr** to generate the FPGA configuration.
 # This is called the **place** and **route** step.
