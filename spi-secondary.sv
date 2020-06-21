@@ -1,7 +1,9 @@
 
 module SpiSecondary #(
-    parameter integer WORD_BITS = 8,
-    localparam integer WORD_BITS_SIZE = $clog2 (WORD_BITS)
+    parameter integer WordBits = 8,
+
+    // Derived
+    localparam integer WordBitSize = $clog2 (WordBits)
 ) (
     input logic clk,
 
@@ -13,22 +15,22 @@ module SpiSecondary #(
 
     // Bus interface
     output logic word_ready,  // New word received and setting the output with to_send
-    output wire [WORD_BITS-1:0] data_word_received,  // data just received
-    input wire [WORD_BITS-1:0] data_word_to_send  // data to send in next word
+    output wire [WordBits-1:0] data_word_received,  // data just received
+    input wire [WordBits-1:0] data_word_to_send  // data to send in next word
 );
-  logic [WORD_BITS-1:0] data;  // Register of size WORD_BITS + 1.
+  logic [WordBits-1:0] data;  // Register of size WordBits + 1.
 
   // Count how many bits we received.
   // One bit for the overflow to see when byte is full.
-  logic [WORD_BITS_SIZE:0] counter = {(WORD_BITS_SIZE + 1) {1'b0}};
+  logic [WordBitSize:0] counter = {(WordBitSize + 1) {1'b0}};
 
   logic [2:0] sck_buffer = 2'b00;
   wire rising = (sck_buffer[2:1] == 2'b01);  // now we can detect SCK rising edges
   wire falling = (sck_buffer[2:1] == 2'b10);
 
-  assign word_ready = counter[WORD_BITS_SIZE];
+  assign word_ready = counter[WordBitSize];
 
-  // Assign the last WORD_BITS of data_received to the output.
+  // Assign the last WordBits of data_received to the output.
   assign data_word_received = data;
 
   // Shift register.
@@ -37,17 +39,17 @@ module SpiSecondary #(
       data <= data_word_to_send;
 
       // Last bit!
-      out_bit <= data_word_to_send[WORD_BITS - 1];
+      out_bit <= data_word_to_send[WordBits - 1];
     end
 
     if (rising) begin
       // Shift data_word received by one bit and include the new bit.
-      data <= {data[WORD_BITS - 2:0], in_bit};
+      data <= {data[WordBits - 2:0], in_bit};
     end  // if (rising)
 
     if (falling) begin
       // Set msb to output
-      out_bit <= data[WORD_BITS - 1];
+      out_bit <= data[WordBits - 1];
 
       // Increment the counter
       counter <= counter + 1;
@@ -59,7 +61,7 @@ module SpiSecondary #(
     // Overflow! We stored a full word
     if (word_ready == 1'b1) begin
       // Reset the counter
-      counter[WORD_BITS_SIZE] <= 1'b0;
+      counter[WordBitSize] <= 1'b0;
       // Update the data with the new word to be sent
       data <= data_word_to_send;
     end

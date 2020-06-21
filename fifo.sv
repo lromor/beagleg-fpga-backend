@@ -1,49 +1,50 @@
 // A synchronous fifo that receives n bytes at a time and fills a fifo.
-// Whenever RECORD_WORDS inputs are fed, a new record can be dequed.
-// RECORD_WORDS and SLOTS need to be a power of 2.
+// Whenever RecordWords inputs are fed, a new record can be dequed.
+// RecordWords and Depth need to be a power of 2.
 // To feed an input or read a record, write_en/read_en must be set to high.
 // In the next rising clock edge the fifo will be updated either by copying
 // the new input or dequeing out from the fifo first record.
 //
 // TODO: write_en and read_en sounds like the wrong word. read_req ?
 module Fifo #(
-    parameter integer WORD_SIZE = 8,
-    parameter integer RECORD_WORDS = 16,  // Number of inputs required to make a record.
-    parameter integer SLOTS = 8,  // Number of records, should be a power of 2
+    parameter integer WordSize = 8,
+    parameter integer RecordWords = 16,  // Number of inputs required to make a record.
+    parameter integer Depth = 8,  // Number of records, should be a power of 2
 
     // Derived
-    localparam integer RECORD_SIZE_BITS = WORD_SIZE * RECORD_WORDS,
-    localparam integer STORAGE_SIZE = SLOTS * RECORD_WORDS,
-    localparam integer STORAGE_POS_SIZE = $clog2 (STORAGE_SIZE),
-    localparam integer RECORD_POS_SIZE = $clog2 (RECORD_WORDS)
+    localparam integer RecordSizeBits = WordSize * RecordWords,
+    localparam integer StorageSize = Depth * RecordWords,
+    localparam integer StoragePosSize = $clog2 (StorageSize),
+    localparam integer RecordPosSize = $clog2 (RecordWords)
 ) (
     input logic clk,  // Input clock
 
-    input logic                 write_en,  // Write data in on rising
-    input wire  [WORD_SIZE-1:0] data_in,  // Input to the fifo
+    input logic                write_en,  // Write data in on rising
+    input wire  [WordSize-1:0] data_in,  // Input to the fifo
 
-    input  logic                        read_en,  // Read on rising
-    output       [RECORD_SIZE_BITS-1:0] data_out,  // Output data when reading
+    input  logic                      read_en,  // Read on rising
+    output       [RecordSizeBits-1:0] data_out,  // Output data when reading
 
-    output logic                      full,  // Rises when fifo is full
-    output logic                      empty,  // Rises when fifo is empty
-    output wire  [STORAGE_POS_SIZE:0] size  // Size of fifo in words
+    output logic                    full,  // Rises when fifo is full
+    output logic                    empty,  // Rises when fifo is empty
+    output wire  [StoragePosSize:0] size  // Size of fifo in words
 );
-  logic [WORD_SIZE-1:0] storage[STORAGE_SIZE-1:0];
+
+  logic [WordSize-1:0] storage[StorageSize-1:0];
 
   // One bit more for the position for the size representation.
-  logic [STORAGE_POS_SIZE:0] write_pos_r = 0;
-  logic [STORAGE_POS_SIZE:0] read_pos_r = 0;
+  logic [StoragePosSize:0] write_pos_r = 0;
+  logic [StoragePosSize:0] read_pos_r = 0;
 
   assign size = write_pos_r - read_pos_r;
 
   // The wires of the read/write positions are a bit less because we use
   // it as indexes for the storage and they need the proper modular arithmetic.
-  wire [STORAGE_SIZE-1:0] write_pos_idx_w = write_pos_r[STORAGE_POS_SIZE - 1:0];
-  wire [STORAGE_SIZE-1:0] read_pos_idx_w = read_pos_r[STORAGE_POS_SIZE - 1:0];
+  wire [StorageSize-1:0] write_pos_idx_w = write_pos_r[StoragePosSize - 1:0];
+  wire [StorageSize-1:0] read_pos_idx_w = read_pos_r[StoragePosSize - 1:0];
 
-  wire empty = (size >> RECORD_POS_SIZE) == 0;
-  wire full = (size == STORAGE_SIZE);
+  wire empty = (size >> RecordPosSize) == 0;
+  wire full = (size == StorageSize);
   wire do_write_w = write_en && !full;
   wire do_read_w = read_en && !empty;
 
@@ -52,8 +53,8 @@ module Fifo #(
   // ¯\_(ツ)_/¯
   generate
     genvar i;
-    for (i = 0; i < RECORD_WORDS; i = i + 1)
-      assign data_out[(i + 1) * WORD_SIZE - 1:i * WORD_SIZE] = storage[read_pos_idx_w + i];
+    for (i = 0; i < RecordWords; i = i + 1)
+      assign data_out[(i + 1) * WordSize - 1:i * WordSize] = storage[read_pos_idx_w + i];
   endgenerate
 
   // Write stuff
@@ -67,8 +68,8 @@ module Fifo #(
     if (do_read_w) begin
       // Step the read pos.
       // Since our record is made of multiple inputs
-      // we step of RECORD_WORDS.
-      read_pos_r <= read_pos_r + RECORD_WORDS;
+      // we step of RecordWords.
+      read_pos_r <= read_pos_r + RecordWords;
     end
   end
 endmodule

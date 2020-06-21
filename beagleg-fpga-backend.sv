@@ -22,14 +22,14 @@ module top (
 
   typedef logic [31:0] MotionSegment;  // Yosys not supported yet: struct
 
-  localparam integer FIFO_WORD_SIZE = 8;
-  localparam integer FIFO_RECORD_WORDS = 4;  // Yosys not supported: $bits(MotionSegment) / 8;
-  localparam integer FIFO_SLOTS = 16;
+  localparam integer FifoWordSize = 8;
+  localparam integer FifoRecordWords = 4;  // Yosys not supported: $bits(MotionSegment) / 8;
+  localparam integer FifoDepth = 16;
 
   typedef enum {
     STATE_IDLE,
     STATE_RECEIVE_SEGMENTS
-  } state_t;
+  } state_e;
 
   // Must match enum in beagleg-protocol.cc
   // (comments written like that because
@@ -43,7 +43,7 @@ module top (
 
     // Send segments to fifo
     CMD_WRITE_FIFO = 2
-  } command_t;
+  } command_e;
 
   // Spi
   logic [7:0] spi_secondary_data_r;
@@ -52,18 +52,18 @@ module top (
   wire [7:0] spi_secondary_data_w;
 
   // Fifo
-  wire [$clog2(FIFO_SLOTS * FIFO_RECORD_WORDS):0] fifo_size;
+  wire [$clog2(FifoDepth * FifoRecordWords):0] fifo_size;
   wire fifo_full_w;
   wire fifo_empty_w;
   wire fifo_write_en;
 
   // FSM
-  state_t state;
+  state_e state;
   initial state = STATE_IDLE;
 
   wire [7:0] empty_slots;
 
-  assign empty_slots = FIFO_SLOTS - (fifo_size >> $clog2(FIFO_RECORD_WORDS));
+  assign empty_slots = FifoDepth - (fifo_size >> $clog2(FifoRecordWords));
 
   assign spi_secondary_data_w = (state == STATE_IDLE) ? empty_slots : 8'b00000000;
   assign fifo_write_en = (state == STATE_RECEIVE_SEGMENTS) ? spi_main_data_ready_w : 0;
@@ -76,7 +76,7 @@ module top (
   // Yellow (=red+green) when we only have four left slots.
   // Red when when fifo full and can't accept more.
   // LED signals are negated, as they are using a common anode.
-  assign led_blue = !(empty_slots == FIFO_SLOTS);
+  assign led_blue = !(empty_slots == FifoDepth);
   assign led_green = !(empty_slots > 0);
   assign led_red = !(empty_slots < 4);
 
@@ -94,9 +94,9 @@ module top (
   MotionSegment fifo_step_transfer;
 
   // Motion segments are sent via this fifo to motion engine.
-  Fifo #(.WORD_SIZE(FIFO_WORD_SIZE),
-         .RECORD_WORDS(FIFO_RECORD_WORDS),
-         .SLOTS(FIFO_SLOTS))
+  Fifo #(.WordSize(FifoWordSize),
+         .RecordWords(FifoRecordWords),
+         .Depth(FifoDepth))
    motion_segment_fifo(.clk(clk),
                        .size(fifo_size),
                        // Write stuff
@@ -105,16 +105,16 @@ module top (
                        // Status
                        .full(fifo_full_w),
                        .empty(fifo_empty_w),
-		       // Reading
-		       .read_en(request_read),
-		       .data_out(fifo_step_transfer));
+                       // Reading
+                       .read_en(request_read),
+                       .data_out(fifo_step_transfer));
 
-  SegmentStepGenerator #(.READ_BYTES(4))
+  SegmentStepGenerator #(.ReadBytes(FifoRecordWords))
    step_gen(.clk(clk),
-	    .data_available(~fifo_empty_w),
-	    .data_request(request_read),
-	    .data(fifo_step_transfer),
-	    .step_out(system_led));
+            .data_available(~fifo_empty_w),
+            .data_request(request_read),
+            .data(fifo_step_transfer),
+            .step_out(system_led));
 
   // The first byte decides what we're going to do.
   always @(posedge clk) begin

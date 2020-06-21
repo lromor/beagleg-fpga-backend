@@ -1,14 +1,14 @@
 module SegmentStepGenerator #(
     // we really need some toplevel typedef for the motion segment,
     // so that we don't define this all over everywhere.
-    parameter integer READ_BYTES = 4,
-    parameter integer PRESCALE_BITS = 23
+    parameter integer ReadBytes = 4,
+    parameter integer PrescaleBits = 23
 ) (
     input logic clk,
 
-    input  logic                    data_available,
-    output logic                    data_request,
-    input  logic [8*READ_BYTES-1:0] data,
+    input  logic                   data_available,
+    output logic                   data_request,
+    input  logic [8*ReadBytes-1:0] data,
 
     output logic step_out
 );
@@ -16,14 +16,14 @@ module SegmentStepGenerator #(
   typedef enum {
     STATE_WAIT,
     STATE_EXECUTE
-  } state_t;
+  } state_e;
 
   // In the lower parts, we have the fast counting bits with
   // system clock frequency; we output the step frequency at that point.
-  logic [8*READ_BYTES + PRESCALE_BITS - 1:0] countdown_register;
-  assign step_out = countdown_register[PRESCALE_BITS - 1];
+  logic [8*ReadBytes + PrescaleBits - 1:0] countdown_register;
+  assign step_out = countdown_register[PrescaleBits - 1];
 
-  state_t state;
+  state_e state;
   initial begin
     state = STATE_WAIT;
     countdown_register = 0;
@@ -35,7 +35,7 @@ module SegmentStepGenerator #(
         if (data_available) begin
           // available actually means, we can read the data
           // right now.
-          countdown_register <= (data << PRESCALE_BITS);
+          countdown_register <= (data << PrescaleBits);
           data_request <= 1'b1;
           state <= STATE_EXECUTE;
         end else begin
