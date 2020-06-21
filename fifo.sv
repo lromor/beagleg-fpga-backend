@@ -20,14 +20,14 @@ module fifo #(
     input logic clk,  // Input clock
 
     input logic                write_en,  // Write data in on rising
-    input wire  [WordSize-1:0] data_in,  // Input to the fifo
+    input logic [WordSize-1:0] data_in,  // Input to the fifo
 
     input  logic                      read_en,  // Read on rising
     output       [RecordSizeBits-1:0] data_out,  // Output data when reading
 
     output logic                    full,  // Rises when fifo is full
     output logic                    empty,  // Rises when fifo is empty
-    output wire  [StoragePosSize:0] size  // Size of fifo in words
+    output logic [StoragePosSize:0] size  // Size of fifo in words
 );
 
   logic [WordSize-1:0] storage[StorageSize];

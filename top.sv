@@ -47,21 +47,21 @@ module top (
 
   // Spi
   logic [7:0] spi_secondary_data_r;
-  wire [7:0] spi_main_data_w;
-  wire spi_main_data_ready_w;
-  wire [7:0] spi_secondary_data_w;
+  logic [7:0] spi_main_data_w;
+  logic spi_main_data_ready_w;
+  logic [7:0] spi_secondary_data_w;
 
   // Fifo
-  wire [$clog2(FifoDepth * FifoRecordWords):0] fifo_size;
-  wire fifo_full_w;
-  wire fifo_empty_w;
-  wire fifo_write_en;
+  logic [$clog2(FifoDepth * FifoRecordWords):0] fifo_size;
+  logic fifo_full_w;
+  logic fifo_empty_w;
+  logic fifo_write_en;
 
   // FSM
   state_e state;
   initial state = STATE_IDLE;
 
-  wire [7:0] empty_slots;
+  logic [7:0] empty_slots;
 
   assign empty_slots = FifoDepth - (fifo_size >> $clog2(FifoRecordWords));
 
@@ -90,7 +90,7 @@ module top (
                               .data_word_to_send(spi_secondary_data_w),
                               .word_ready(spi_main_data_ready_w));
 
-  wire request_read;
+  logic request_read;
   MotionSegment fifo_step_transfer;
 
   // Motion segments are sent via this fifo to motion engine.
