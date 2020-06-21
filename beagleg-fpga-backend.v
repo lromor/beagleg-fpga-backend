@@ -5,6 +5,7 @@ module top (
     output system_led,
     output led_red,
     output led_green,
+    output led_blue,
     input  spi_mosi,
     input  spi_sck,
     input  spi_cs,
@@ -70,10 +71,12 @@ module top (
   wire [7:0] debug = {p8, p7, p6, p5, p4, p3, p2, p1};
   assign debug = spi_secondary_data_w;
 
+  // Cyan: empty.
   // Green when fifo has plenty free.
   // Yellow (=red+green) when we only have four left slots.
   // Red when when fifo full and can't accept more.
   // LED signals are negated, as they are using a common anode.
+  assign led_blue = !(empty_slots == FIFO_SLOTS);
   assign led_green = !(empty_slots > 0);
   assign led_red = !(empty_slots < 4);
 
