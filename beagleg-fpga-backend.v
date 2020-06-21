@@ -42,8 +42,8 @@ module top (
 
   // FSM
   reg [2:0] state = 0;  // 0: IDLE, 1: FEEDING_FIFO_OP
-  assign spi_secondary_data_w = (state == 3'b000) ? fifo_size >> $clog2(FIFO_RECORD_WORDS) :
-      8'b00000000;
+  assign spi_secondary_data_w = (state == 3'b000) ?
+      FIFO_SLOTS - (fifo_size >> $clog2(FIFO_RECORD_WORDS)) : 8'b00000000;
   assign fifo_write_en = (state == 3'b001) ? spi_main_data_ready_w : 0;
 
   wire [7:0] debug = {p8, p7, p6, p5, p4, p3, p2, p1};

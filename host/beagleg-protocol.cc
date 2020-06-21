@@ -27,10 +27,6 @@ struct QueueStatus {
 // How many bytes there are in one record.
 static constexpr int BYTES_PER_FIFO_RECORD = sizeof(beagleg::MotionSegment);
 
-// Number of total slots in the fifo. We need this to determine
-// how many we can read.
-static constexpr int FIFO_SLOTS = 16;
-
 // This needs to be in-sync with FPGA impl.
 enum Command {
     CMD_NO_OP      = 0x00,  // Just send one byte to receive fifo free
@@ -82,7 +78,7 @@ public:
         const char cmd = CMD_NO_OP;
         char val;
         spi_channel_->TransferBuffer(&cmd, &val, 1);
-        return free_slots_from_first_byte(val);
+        return val;
     }
 
     // Get queue status. Also return number of free slots.
@@ -93,7 +89,7 @@ public:
         tx_buffer[0] = CMD_STATUS;
         spi_channel_->TransferBuffer(tx_buffer, rx_buffer, tx_len);
         memcpy(status, rx_buffer + 1, sizeof(*status));
-        return free_slots_from_first_byte(rx_buffer[0]);
+        return rx_buffer[0];
     }
 
     // Attempts to send motion segments. Only sends amount possible.
@@ -124,12 +120,6 @@ public:
     }
 
 private:
-    static int free_slots_from_first_byte(uint8_t b) {
-        // Right now, the FPGA returns the total number of used
-        // slots not free slots.
-        return FIFO_SLOTS - b;
-    }
-
     SPIHost *const spi_channel_;
 };
 
