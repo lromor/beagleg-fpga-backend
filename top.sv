@@ -125,6 +125,7 @@ module top (
           case (spi_main_data_w)
             CMD_STATUS: state <= STATE_IDLE;  // No-op
             CMD_WRITE_FIFO: state <= STATE_RECEIVE_SEGMENTS;
+            default: state <= STATE_IDLE;
           endcase  // case (spi_main_data_w)
         end
         STATE_RECEIVE_SEGMENTS: begin
