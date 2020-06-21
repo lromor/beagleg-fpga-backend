@@ -69,10 +69,12 @@ module top (
   wire [7:0] debug = {p8, p7, p6, p5, p4, p3, p2, p1};
   assign debug = spi_secondary_data_w;
 
-  // Green when still 4 left, but red when empty.
+  // Green when fifo has plenty free.
+  // Yellow (=red+green) when we only have four left slots.
+  // Red when when fifo full and can't accept more.
   // LED signals are negated, as they are using a common anode.
-  assign led_red = !(empty_slots == 0);
-  assign led_green = !(empty_slots < 4 && empty_slots > 0);
+  assign led_green = !(empty_slots > 0);
+  assign led_red = !(empty_slots < 4);
 
   // Receive commands + data from host
   SpiSecondary spi_secondary(.clk(clk),
@@ -99,6 +101,9 @@ module top (
 		       // Reading. Not yet.
 		       .read_en(0));
 
+  SegmentStepGenerator step_gen();
+
+
   // The first byte decides what we're going to do.
   always @(posedge clk) begin
     if (spi_main_data_ready_w & (spi_cs == 0))
@@ -111,7 +116,7 @@ module top (
           endcase  // case (spi_main_data_w)
         end
         STATE_RECEIVE_SEGMENTS: begin
-          // Feeding to fifo. Do nothing?
+          // Feeding to fifo do to fifo_write_en. Do nothing otherwise.
         end
         default: state <= STATE_IDLE;  // Do nothing
       endcase

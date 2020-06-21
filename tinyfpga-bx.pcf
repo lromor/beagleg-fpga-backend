@@ -1,9 +1,9 @@
 set_io clk B2      # 16 Mhz system clock
 
 # Some diagnostic LEDs.
-set_io led_red D8    # Pin 16
+set_io led_red H9    # Pin 14
 set_io led_green D9  # Pin 15
-set_io led_blue H9   # Pin 14
+set_io led_blue D8   # Pin 16
 
 # Spi interface
 set_io spi_mosi C9     # Pin 17

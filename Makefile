@@ -2,7 +2,7 @@ PCF?=tinyfpga-bx.pcf
 PNRFLAGS?=--lp8k --package cm81
 
 TARGET=beagleg-fpga-backend
-SOURCES=beagleg-fpga-backend.v fifo.v spi-secondary.v
+SOURCES=beagleg-fpga-backend.v fifo.v spi-secondary.v segment-step-generator.v
 
 YOSYS?=yosys
 
@@ -13,7 +13,7 @@ beagleg-fpga-backend.json: $(SOURCES)
 
 # Use **nextpnr** to generate the FPGA configuration.
 # This is called the **place** and **route** step.
-%.asc: %.json
+%.asc: %.json $(PCF)
 	nextpnr-ice40 $(PNRFLAGS) --json $< --pcf $(PCF) --asc $@
 
 # Use icepack to convert the FPGA configuration into a "bitstream" loadable onto the FPGA.
