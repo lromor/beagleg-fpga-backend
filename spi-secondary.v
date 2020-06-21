@@ -24,6 +24,7 @@ module SpiSecondary #(
 
   reg [2:0] sck_buffer = 2'b00;
   wire rising = (sck_buffer[2:1] == 2'b01);  // now we can detect SCK rising edges
+  wire falling = (sck_buffer[2:1] == 2'b10);
 
   assign word_ready = counter[WORD_BITS_SIZE];
 
@@ -39,17 +40,19 @@ module SpiSecondary #(
       out_bit <= data_word_to_send[WORD_BITS - 1];
     end
 
-
     if (rising) begin
       // Shift data_word received by one bit and include the new bit.
       data <= {data[WORD_BITS - 2:0], in_bit};
+    end  // if (rising)
 
+    if (falling) begin
       // Set msb to output
-      out_bit <= data[WORD_BITS - 2];
+      out_bit <= data[WORD_BITS - 1];
 
       // Increment the counter
       counter <= counter + 1;
-    end  // if (rising)
+    end
+
     // Update state
     sck_buffer <= {sck_buffer[1:0], sck};
 
