@@ -28,6 +28,19 @@ module top (
     STATE_RECEIVE_SEGMENTS
   } state_t;
 
+  // Must match enum in beagleg-protocol.cc
+  // (comments written like that because
+  // https://github.com/google/verible/issues/336 )
+  typedef enum {
+    // Get fifo free slots
+    CMD_NO_OP = 0,
+
+    // Get status word
+    CMD_STATUS = 1,
+
+    // Send segments to fifo
+    CMD_WRITE_FIFO = 2
+  } command_t;
 
   LedBlinker blinker(.clk(clk),
                      .led_red(led_red),
@@ -88,10 +101,8 @@ module top (
         STATE_IDLE: begin
           // Read op
           case (spi_main_data_w)
-            8'b00000000: state <= STATE_IDLE;  // No-op
-            8'b00000010: begin
-              state <= STATE_RECEIVE_SEGMENTS;
-            end
+            CMD_STATUS: state <= STATE_IDLE;  // No-op
+            CMD_WRITE_FIFO: state <= STATE_RECEIVE_SEGMENTS;
           endcase  // case (spi_main_data_w)
         end
         STATE_RECEIVE_SEGMENTS: begin
