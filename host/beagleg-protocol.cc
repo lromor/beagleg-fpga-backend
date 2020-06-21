@@ -94,7 +94,7 @@ public:
 
     // Attempts to send motion segments. Only sends amount possible.
     // Returns number of segments sent.
-    int SendMotionSegments(beagleg::MotionSegment *segments, int count) {
+    int SendMotionSegments(const beagleg::MotionSegment *segments, int count) {
         fprintf(stderr, "Writing first byte to read free slots, and but keep CS low to continue transaction...\n");
         const char command = CMD_WRITE_FIFO;
         uint8_t free_slots;
@@ -129,24 +129,26 @@ static void print_status(const beagleg::QueueStatus &status) {
     printf("Status: counter:%d; index:%d\n", status.counter, status.index);
 }
 
-static void ReadStepsAndWrite(TerminalInput *terminal, BeagleGSPIProtocol *protocol) {
+static void ReadSegmentSteps(TerminalInput *terminal, beagleg::MotionSegment *segment) {
     printf("How many steps: ");
     fflush(stdout);
     char k;
 
-    beagleg::MotionSegment segment;
-    segment.count_steps = 0;
+    segment->count_steps = 0;
     while ((k = terminal->read_char()) != '\n') {
         if (k >= '0' && k <= '9') {
             write(STDOUT_FILENO, &k, 1);
-            segment.count_steps = segment.count_steps * 10 + (k - '0');
+            segment->count_steps = segment->count_steps * 10 + (k - '0');
         } else {
             k = '\007';  // beep.
             write(STDOUT_FILENO, &k, 1);
         }
     }
     printf(" \u2713\n");
-    int segments_written = protocol->SendMotionSegments(&segment, 1);
+}
+
+static void SendSegment(const beagleg::MotionSegment &segment, BeagleGSPIProtocol *protocol) {
+    const int segments_written = protocol->SendMotionSegments(&segment, 1);
     if (segments_written) {
         // Also write it in hex to better see the endianness we send over the wire.
         printf("Wrote segment with %d steps (that is 0x%02X·%02X·%02X·%02X hex)\n",
@@ -192,17 +194,21 @@ int main(int argc, char *argv[]) {
     printf("User interaction:\n"
            "\tf    - no-op. Just read fifo free slots\n"
            "\ts    - read status word (fifo free + status)\n"
-           "\tw    - write a motion segment to fifo\n"
+           "\tw    - read step count and send motion segment to fifo\n"
+           "\tW    - send motion segment to fifo with previously with lower-case 'w' read steps.\n"
            "\tESC  - quit\n"
         );
 
     static constexpr char nothing_to_do[] = "¯\\_(ツ)_/¯";
+
+    beagleg::MotionSegment segment;
+    segment.count_steps = 3;
     beagleg::QueueStatus status;
     BeagleGSPIProtocol protocol(&spi);
     TerminalInput terminal;
 
     for (;;) {
-        fprintf(stderr, "------[ f: free-slots, s: status; w: write ESC: quit] --------------\n");
+        fprintf(stderr, "------[ f: free-slots, s: status; w: write; W: write same again; ESC: quit] --------------\n");
         const char key = terminal.read_char();
         switch (key) {
         case 'f':
@@ -216,7 +222,13 @@ int main(int argc, char *argv[]) {
             break;
 
         case 'w':
-            ReadStepsAndWrite(&terminal, &protocol);
+            ReadSegmentSteps(&terminal, &segment);
+            SendSegment(segment, &protocol);
+            break;
+
+        case 'W':
+            // Send previously read segment.
+            SendSegment(segment, &protocol);
             break;
 
         case 'q':
