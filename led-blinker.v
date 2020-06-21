@@ -6,7 +6,7 @@ module LedBlinker (
     output led_blue
 );
 
-  reg [24:0] prescaler;
+  logic [24:0] prescaler;
   always @(posedge clk) begin
     prescaler <= prescaler + 1;
   end

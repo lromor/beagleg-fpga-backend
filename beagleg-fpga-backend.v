@@ -48,7 +48,7 @@ module top (
                      .led_blue(led_blue));
 
   // Spi
-  reg [7:0] spi_secondary_data_r;
+  logic [7:0] spi_secondary_data_r;
   wire [7:0] spi_main_data_w;
   wire spi_main_data_ready_w;
   wire [7:0] spi_secondary_data_w;

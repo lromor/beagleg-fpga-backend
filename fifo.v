@@ -22,11 +22,11 @@ module Fifo #(
     output logic                        empty,  // Rises when fifo is empty
     output       [RECORD_SIZE_BITS-1:0] data_out  // Output data when reading
 );
-  reg [WORD_SIZE-1:0] storage[STORAGE_SIZE-1:0];
+  logic [WORD_SIZE-1:0] storage[STORAGE_SIZE-1:0];
 
   // One bit more for the position for the size representation.
-  reg [STORAGE_POS_SIZE:0] write_pos_r = 0;
-  reg [STORAGE_POS_SIZE:0] read_pos_r = 0;
+  logic [STORAGE_POS_SIZE:0] write_pos_r = 0;
+  logic [STORAGE_POS_SIZE:0] read_pos_r = 0;
 
   assign size = write_pos_r - read_pos_r;
 

@@ -16,13 +16,13 @@ module SpiSecondary #(
     output wire [WORD_BITS-1:0] data_word_received,  // data just received
     input wire [WORD_BITS-1:0] data_word_to_send  // data to send in next word
 );
-  reg [WORD_BITS-1:0] data;  // Register of size WORD_BITS + 1.
+  logic [WORD_BITS-1:0] data;  // Register of size WORD_BITS + 1.
 
   // Count how many bits we received.
   // One bit for the overflow to see when byte is full.
-  reg [WORD_BITS_SIZE:0] counter = {(WORD_BITS_SIZE + 1) {1'b0}};
+  logic [WORD_BITS_SIZE:0] counter = {(WORD_BITS_SIZE + 1) {1'b0}};
 
-  reg [2:0] sck_buffer = 2'b00;
+  logic [2:0] sck_buffer = 2'b00;
   wire rising = (sck_buffer[2:1] == 2'b01);  // now we can detect SCK rising edges
   wire falling = (sck_buffer[2:1] == 2'b10);
 
