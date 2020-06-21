@@ -53,10 +53,12 @@ bool SPIHost::Connect(const char *device, const Options &set_options) {
         return io_problem(device);
 
     options_ = set_options;
+    options_.mode = 0x55555555;  // See if we get properly set.
     // Right now, we only read the mode, but later should allow to set
     // it via options.
     int ret = ioctl(fd_, SPI_IOC_RD_MODE32, &options_.mode);
     if (ret < 0) return io_problem("Couldn't read mode");
+    fprintf(stderr, "SPI mode is: 0x%08x\n", options_.mode);
 
     ret = ioctl(fd_, SPI_IOC_WR_BITS_PER_WORD, &options_.bits_per_word);
     if (ret < 0) return io_problem("Setting bits per word");
