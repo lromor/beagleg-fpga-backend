@@ -2,7 +2,7 @@ PCF?=tinyfpga-bx.pcf
 PNRFLAGS?=--lp8k --package cm81
 
 TARGET=beagleg-fpga-backend
-SOURCES=fifo.v spi-secondary.v segment-step-generator.v beagleg-fpga-backend.v
+SOURCES=fifo.sv spi-secondary.sv segment-step-generator.sv beagleg-fpga-backend.sv
 
 YOSYS?=yosys
 
