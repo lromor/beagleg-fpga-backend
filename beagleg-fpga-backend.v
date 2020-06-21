@@ -23,6 +23,12 @@ module top (
   localparam integer FIFO_RECORD_WORDS = 4;
   localparam integer FIFO_SLOTS = 16;
 
+  typedef enum {
+    STATE_IDLE,
+    STATE_RECEIVE_SEGMENTS
+  } state_t;
+
+
   LedBlinker blinker(.clk(clk),
                      .led_red(led_red),
                      .led_green(led_green),
@@ -41,10 +47,12 @@ module top (
   wire fifo_write_en;
 
   // FSM
-  reg [2:0] state = 0;  // 0: IDLE, 1: FEEDING_FIFO_OP
-  assign spi_secondary_data_w = (state == 3'b000) ?
+  state_t state;
+  initial state = STATE_IDLE;
+
+  assign spi_secondary_data_w = (state == STATE_IDLE) ?
       FIFO_SLOTS - (fifo_size >> $clog2(FIFO_RECORD_WORDS)) : 8'b00000000;
-  assign fifo_write_en = (state == 3'b001) ? spi_main_data_ready_w : 0;
+  assign fifo_write_en = (state == STATE_RECEIVE_SEGMENTS) ? spi_main_data_ready_w : 0;
 
   wire [7:0] debug = {p8, p7, p6, p5, p4, p3, p2, p1};
 
@@ -77,19 +85,19 @@ module top (
     debug <= spi_secondary_data_w;
     if (spi_main_data_ready_w & (spi_cs == 0))
       case (state)
-        3'b000: begin
+        STATE_IDLE: begin
           // Read op
           case (spi_main_data_w)
-            8'b00000000: state <= 3'b000;  // No-op
+            8'b00000000: state <= STATE_IDLE;  // No-op
             8'b00000010: begin
-              state <= 3'b001;  // Send next record to fifo.
+              state <= STATE_RECEIVE_SEGMENTS;
             end
           endcase  // case (spi_main_data_w)
         end
-        3'b001: begin
+        STATE_RECEIVE_SEGMENTS: begin
           // Feeding to fifo. Do nothing?
         end
-        default: state <= 3'b000;  // Do nothing
+        default: state <= STATE_IDLE;  // Do nothing
       endcase
 
     // Reset the fsm state to idle.
