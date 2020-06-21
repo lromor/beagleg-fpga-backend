@@ -81,20 +81,20 @@ module top (
   assign led_red = !(empty_slots < 4);
 
   // Receive commands + data from host
-  SpiSecondary spi_secondary(.clk(clk),
-                             .sck(spi_sck),
-                             .in_bit(spi_mosi),
-                             .out_bit(spi_miso),
-                             .cs(spi_cs),
-                             .data_word_received(spi_main_data_w),
-                             .data_word_to_send(spi_secondary_data_w),
-                             .word_ready(spi_main_data_ready_w));
+  spi_secondary spi_secondary(.clk(clk),
+                              .sck(spi_sck),
+                              .in_bit(spi_mosi),
+                              .out_bit(spi_miso),
+                              .cs(spi_cs),
+                              .data_word_received(spi_main_data_w),
+                              .data_word_to_send(spi_secondary_data_w),
+                              .word_ready(spi_main_data_ready_w));
 
   wire request_read;
   MotionSegment fifo_step_transfer;
 
   // Motion segments are sent via this fifo to motion engine.
-  Fifo #(.WordSize(FifoWordSize),
+  fifo #(.WordSize(FifoWordSize),
          .RecordWords(FifoRecordWords),
          .Depth(FifoDepth))
    motion_segment_fifo(.clk(clk),
@@ -109,7 +109,7 @@ module top (
                        .read_en(request_read),
                        .data_out(fifo_step_transfer));
 
-  SegmentStepGenerator #(.ReadBytes(FifoRecordWords))
+  segment_step_generator #(.ReadBytes(FifoRecordWords))
    step_gen(.clk(clk),
             .data_available(~fifo_empty_w),
             .data_request(request_read),

@@ -1,4 +1,4 @@
-module SegmentStepGenerator #(
+module segment_step_generator #(
     // we really need some toplevel typedef for the motion segment,
     // so that we don't define this all over everywhere.
     parameter integer ReadBytes = 4,

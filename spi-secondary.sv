@@ -1,5 +1,7 @@
-
-module SpiSecondary #(
+//
+// A SPI client side with configurable word size
+//
+module spi_secondary #(
     parameter integer WordBits = 8,
 
     // Derived

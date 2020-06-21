@@ -6,7 +6,7 @@
 // the new input or dequeing out from the fifo first record.
 //
 // TODO: write_en and read_en sounds like the wrong word. read_req ?
-module Fifo #(
+module fifo #(
     parameter integer WordSize = 8,
     parameter integer RecordWords = 16,  // Number of inputs required to make a record.
     parameter integer Depth = 8,  // Number of records, should be a power of 2
