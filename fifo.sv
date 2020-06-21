@@ -30,7 +30,7 @@ module fifo #(
     output wire  [StoragePosSize:0] size  // Size of fifo in words
 );
 
-  logic [WordSize-1:0] storage[StorageSize-1:0];
+  logic [WordSize-1:0] storage[StorageSize];
 
   // One bit more for the position for the size representation.
   logic [StoragePosSize:0] write_pos_r = 0;
