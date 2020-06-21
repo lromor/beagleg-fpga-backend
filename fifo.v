@@ -4,23 +4,30 @@
 // To feed an input or read a record, write_en/read_en must be set to high.
 // In the next rising clock edge the fifo will be updated either by copying
 // the new input or dequeing out from the fifo first record.
+//
+// TODO: write_en and read_en sounds like the wrong word. read_req ?
 module Fifo #(
     parameter integer WORD_SIZE = 8,
     parameter integer RECORD_WORDS = 16,  // Number of inputs required to make a record.
     parameter integer SLOTS = 8,  // Number of records, should be a power of 2
+
+    // Derived
     localparam integer RECORD_SIZE_BITS = WORD_SIZE * RECORD_WORDS,
     localparam integer STORAGE_SIZE = SLOTS * RECORD_WORDS,
     localparam integer STORAGE_POS_SIZE = $clog2 (STORAGE_SIZE),
     localparam integer RECORD_POS_SIZE = $clog2 (RECORD_WORDS)
 ) (
-    input  logic                        clk,  // Input clock
-    input  logic                        write_en,  // Write data in on rising
-    input  wire  [       WORD_SIZE-1:0] data_in,  // Input to the fifo
+    input logic clk,  // Input clock
+
+    input logic                 write_en,  // Write data in on rising
+    input wire  [WORD_SIZE-1:0] data_in,  // Input to the fifo
+
     input  logic                        read_en,  // Read on rising
-    output wire  [  STORAGE_POS_SIZE:0] size,  // Size of fifo in words
-    output logic                        full,  // Rises when fifo is full
-    output logic                        empty,  // Rises when fifo is empty
-    output       [RECORD_SIZE_BITS-1:0] data_out  // Output data when reading
+    output       [RECORD_SIZE_BITS-1:0] data_out,  // Output data when reading
+
+    output logic                      full,  // Rises when fifo is full
+    output logic                      empty,  // Rises when fifo is empty
+    output wire  [STORAGE_POS_SIZE:0] size  // Size of fifo in words
 );
   logic [WORD_SIZE-1:0] storage[STORAGE_SIZE-1:0];
 
@@ -52,7 +59,7 @@ module Fifo #(
   // Write stuff
   always @(posedge clk) begin
     if (do_write_w) begin
-      // Increment the write position
+      // We read one byte at a time; increment by that.
       write_pos_r <= write_pos_r + 1;
       // Update the storage with the input.
       storage[write_pos_idx_w] <= data_in;

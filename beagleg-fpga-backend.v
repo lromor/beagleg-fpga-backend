@@ -2,6 +2,7 @@
 
 module top (
     input  clk,
+    output system_led,
     output led_red,
     output led_green,
     input  spi_mosi,
@@ -86,6 +87,9 @@ module top (
                              .data_word_to_send(spi_secondary_data_w),
                              .word_ready(spi_main_data_ready_w));
 
+  wire request_read;
+  MotionSegment fifo_step_transfer;
+
   // Motion segments are sent via this fifo to motion engine.
   Fifo #(.WORD_SIZE(FIFO_WORD_SIZE),
          .RECORD_WORDS(FIFO_RECORD_WORDS),
@@ -98,11 +102,16 @@ module top (
                        // Status
                        .full(fifo_full_w),
                        .empty(fifo_empty_w),
-		       // Reading. Not yet.
-		       .read_en(0));
+		       // Reading
+		       .read_en(request_read),
+		       .data_out(fifo_step_transfer));
 
-  SegmentStepGenerator step_gen();
-
+  SegmentStepGenerator #(.READ_BYTES(4))
+   step_gen(.clk(clk),
+	    .data_available(~fifo_empty_w),
+	    .data_request(request_read),
+	    .data(fifo_step_transfer),
+	    .step_out(system_led));
 
   // The first byte decides what we're going to do.
   always @(posedge clk) begin
