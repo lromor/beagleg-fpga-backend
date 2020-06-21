@@ -95,28 +95,25 @@ public:
     // Attempts to send motion segments. Only sends amount possible.
     // Returns number of segments sent.
     int SendMotionSegments(beagleg::MotionSegment *segments, int count) {
-        // First determine how many free slots we have to write to.
-        // TODO: use is_last_in_transaction to do this in one go.
-        fprintf(stderr, "First: Get free slots.\n");
-        const int free_slots = GetFreeSlots();
+        fprintf(stderr, "Writing first byte to read free slots, and but keep CS low to continue transaction...\n");
+        const char command = CMD_WRITE_FIFO;
+        uint8_t free_slots;
+        if (!spi_channel_->TransferBuffer(&command, &free_slots, 1, false))
+            return -1;
+
         if (free_slots < count) {
             fprintf(stderr, "Available fifo space of %d < requested %d\n",
                     free_slots, count);
         }
-        if (free_slots <= 0)
-            return 0;
 
-        const int tx_count = std::min(free_slots, count);
-        const int segment_byte_len = tx_count * sizeof(beagleg::MotionSegment);
-        fprintf(stderr, "Now: Sending actual data; %d elements = %d bytes\n", tx_count, segment_byte_len);
-        char tx_buffer[1 + segment_byte_len];
-        char rx_buffer[1 + segment_byte_len];
-        tx_buffer[0] = CMD_WRITE_FIFO;
-        // TODO: can we do this without copy first ?
-        memcpy(tx_buffer + 1, segments, segment_byte_len);
-        if (!spi_channel_->TransferBuffer(tx_buffer, rx_buffer, 1 + segment_byte_len))
+        const int segment_tx_count = std::min((int)free_slots, count);
+        const int segment_byte_len = segment_tx_count * sizeof(beagleg::MotionSegment);
+        char rx_buffer[segment_byte_len];   // Let's see what it sends back
+        fprintf(stderr, "Sending actual data; %d elements = %d bytes\n",
+                segment_tx_count, segment_byte_len);
+        if (!spi_channel_->TransferBuffer(segments, rx_buffer, segment_byte_len))
             return -1;
-        return tx_count;
+        return segment_tx_count;
     }
 
 private:
@@ -159,7 +156,7 @@ static void ReadStepsAndWrite(TerminalInput *terminal, BeagleGSPIProtocol *proto
                (segment.count_steps >> 8) & 0xFF,
                (segment.count_steps >> 0) & 0xFF);
     } else {
-        printf("Buffer full. Didn't write segment\n");
+        printf("FIFO full. Didn't write segment\n");
     }
 }
 

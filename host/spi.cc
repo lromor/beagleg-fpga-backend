@@ -3,10 +3,12 @@
 #include <fcntl.h>
 #include <linux/spi/spidev.h>
 #include <stdio.h>
+#include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/ioctl.h>
 #include <unistd.h>
+
+#include <algorithm>
 
 // Report io-error, return false.
 static bool io_problem(const char *msg) {
@@ -14,34 +16,27 @@ static bool io_problem(const char *msg) {
     return false;
 }
 
-static void hex_dump(const void *src, size_t length, size_t line_size, const char *prefix) {
-    int i = 0;
-    const unsigned char *address = (const unsigned char*) src;
-    const unsigned char *line = address;
-    unsigned char c;
+static void hex_dump(const void *src, size_t length, const char *prefix) {
+    const uint8_t *address = (const unsigned char*) src;
 
     printf("%s | ", prefix);
     if (!src) {
         printf("\e[1;31m(ignored)\e[0m\n");
         return;
     }
-    while (length-- > 0) {
-        printf("%02X ", *address++);
-        if (!(++i % line_size) || (length == 0 && i % line_size)) {
-            if (length == 0) {
-                while (i++ % line_size)
-                    printf("__ ");
-            }
-            printf(" | ");  /* right close */
-            while (line < address) {
-                c = *line++;
-                printf("%c", (c < 33 || c == 255) ? 0x2E : c);
-            }
-            printf("\e[0m\n");
-            if (length > 0)
-                printf("%s | ", prefix);
-        }
+    if (length == 0) {
+        printf("\e[1;31m(no bytes)\e[0m\n");
+        return;
     }
+    for (size_t b = 0; b < length; ++b) {
+        printf("%02X ", address[b]);
+    }
+    printf(" | ");
+    for (size_t b = 0; b < length; ++b) {
+        uint8_t c = address[b];
+        printf("%c", (c < 33 || c == 255) ? '.' : c);
+    }
+    printf("\e[0m\n");
 }
 
 SPIHost::~SPIHost() { close(fd_); }
@@ -111,8 +106,8 @@ bool SPIHost::TransferBuffer(const void *send, void *receive, size_t len,
     if (ioctl(fd_, SPI_IOC_MESSAGE(1), &tr) < 0)
         return io_problem("Sending SPI message");
     if (options_.verbose) {
-        hex_dump(send, len, len, "\t\e[1;36mTX");
-        hex_dump(receive, len, len, "\t\e[1;33mRX");
+        hex_dump(send, len, "\t\e[1;36mTX");
+        hex_dump(receive, len, "\t\e[1;33mRX");
     }
     return true;
 }
