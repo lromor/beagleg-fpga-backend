@@ -1,5 +1,3 @@
-// Should this file be called 'top.v' ?
-
 module top (
     input  clk,
     output system_led,
