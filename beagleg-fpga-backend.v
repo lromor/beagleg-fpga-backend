@@ -68,6 +68,7 @@ module top (
   assign fifo_write_en = (state == STATE_RECEIVE_SEGMENTS) ? spi_main_data_ready_w : 0;
 
   wire [7:0] debug = {p8, p7, p6, p5, p4, p3, p2, p1};
+  assign debug = spi_secondary_data_w;
 
   // Use the fifo as buffer for the data collected
   // from the spi.
@@ -81,9 +82,8 @@ module top (
                                   // Status
                                   .full(fifo_full_w),
                                   .empty(fifo_empty_w),
-                                  // Read stuff
-                                  .read_en(deplete_r),
-                                  .data_out(fifo_out));
+				  // Reading. Not yet.
+				  .read_en(0));
 
   SpiSecondary spi_secondary(.clk(clk),
                              .sck(spi_sck),
@@ -95,7 +95,6 @@ module top (
                              .word_ready(spi_main_data_ready_w));
 
   always @(posedge clk) begin
-    debug <= spi_secondary_data_w;
     if (spi_main_data_ready_w & (spi_cs == 0))
       case (state)
         STATE_IDLE: begin
