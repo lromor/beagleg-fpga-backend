@@ -18,30 +18,15 @@ module top (
     output p8
 );
 
-  typedef logic [31:0] MotionSegment;  // Yosys not supported yet: struct
-
   localparam integer FifoWordSize = 8;
-  localparam integer FifoRecordWords = 4;  // Yosys not supported: $bits(MotionSegment) / 8;
+  // TODO: how can we assert that bits % FifoWordSize == 0 ?
+  localparam integer FifoRecordWords = beagleg::MotionSegmentBits / FifoWordSize;
   localparam integer FifoDepth = 16;
 
   typedef enum {
     STATE_IDLE,
     STATE_RECEIVE_SEGMENTS
   } state_e;
-
-  // Must match enum in beagleg-protocol.cc
-  // (comments written like that because
-  // https://github.com/google/verible/issues/336 )
-  typedef enum {
-    // Get fifo free slots
-    CMD_NO_OP = 0,
-
-    // Get status word
-    CMD_STATUS = 1,
-
-    // Send segments to fifo
-    CMD_WRITE_FIFO = 2
-  } command_e;
 
   // Spi
   logic [7:0] spi_secondary_data_r;
@@ -89,7 +74,7 @@ module top (
                               .word_ready(spi_main_data_ready_w));
 
   logic request_read;
-  MotionSegment fifo_step_transfer;
+  beagleg::MotionSegment fifo_step_transfer;
 
   // Motion segments are sent via this fifo to motion engine.
   fifo #(.WordSize(FifoWordSize),
@@ -107,12 +92,11 @@ module top (
                        .read_en(request_read),
                        .data_out(fifo_step_transfer));
 
-  segment_step_generator #(.ReadBytes(FifoRecordWords))
-   step_gen(.clk(clk),
-            .data_available(~fifo_empty_w),
-            .data_request(request_read),
-            .data(fifo_step_transfer),
-            .step_out(system_led));
+  segment_step_generator step_gen(.clk(clk),
+                                   .data_available(~fifo_empty_w),
+                                   .data_request(request_read),
+                                   .data(fifo_step_transfer),
+                                   .step_out(system_led));
 
   // The first byte decides what we're going to do.
   always_ff @(posedge clk) begin
@@ -121,8 +105,8 @@ module top (
         STATE_IDLE: begin
           // Read op
           case (spi_main_data_w)
-            CMD_STATUS: state <= STATE_IDLE;  // No-op
-            CMD_WRITE_FIFO: state <= STATE_RECEIVE_SEGMENTS;
+            beagleg::CMD_STATUS: state <= STATE_IDLE;  // No-op
+            beagleg::CMD_WRITE_FIFO: state <= STATE_RECEIVE_SEGMENTS;
             default: state <= STATE_IDLE;
           endcase  // case (spi_main_data_w)
         end
