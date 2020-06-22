@@ -4,6 +4,8 @@ PNRFLAGS?=--lp8k --package cm81
 TARGET=beagleg-fpga-backend
 SOURCES=beagleg_pkg.sv fifo.sv spi-secondary.sv segment-step-generator.sv top.sv
 
+SURELOG?=surelog
+
 YOSYS?=yosys
 
 all: $(TARGET).bit
@@ -31,6 +33,10 @@ format: $(SOURCES)
 
 lint: $(SOURCES)
 	verible-verilog-lint $^
+
+# test-run with surelog to see if there are more error messages.
+surelog: $(SOURCES)
+	$(SURELOG) -parse -sv $^
 
 clean:
 	rm -rf $(TARGET).dfu $(TARGET).bit $(TARGET).asc $(TARGET).json

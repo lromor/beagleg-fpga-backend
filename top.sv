@@ -1,21 +1,21 @@
 module top (
-    input  clk,
-    output system_led,
-    output led_red,
-    output led_green,
-    output led_blue,
-    input  spi_mosi,
-    input  spi_sck,
-    input  spi_cs,
-    output spi_miso,
-    output p1,
-    output p2,
-    output p3,
-    output p4,
-    output p5,
-    output p6,
-    output p7,
-    output p8
+    input  logic clk,
+    output logic system_led,
+    output logic led_red,
+    output logic led_green,
+    output logic led_blue,
+    input  logic spi_mosi,
+    input  logic spi_sck,
+    input  logic spi_cs,
+    output logic spi_miso,
+    output logic p1,
+    output logic p2,
+    output logic p3,
+    output logic p4,
+    output logic p5,
+    output logic p6,
+    output logic p7,
+    output logic p8
 );
 
   localparam integer FifoWordSize = 8;

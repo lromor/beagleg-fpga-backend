@@ -23,7 +23,7 @@ module fifo #(
     input logic [WordSize-1:0] data_in,  // Input to the fifo
 
     input  logic                      read_en,  // Read on rising
-    output       [RecordSizeBits-1:0] data_out,  // Output data when reading
+    output logic [RecordSizeBits-1:0] data_out,  // Output data when reading
 
     output logic                    full,  // Rises when fifo is full
     output logic                    empty,  // Rises when fifo is empty
