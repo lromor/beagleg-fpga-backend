@@ -18,3 +18,8 @@ COMMANDS:
 - NOOP: Receive back the number of free slots we have in fifo.
 - STATUS: return as next 4 bytes the status
 - FILL_FIFO: The next transaction put all the data in fifo (until channel select is up again)
+
+
+# Formal verification
+
+To run symbiosis, use `sby -f fifo.sby`
