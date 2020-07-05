@@ -71,14 +71,13 @@ module fifo #(
       // we step of RecordWords.
       read_pos_r <= read_pos_r + RecordWords;
     end
-  end // always @ (posedge clk)
+  end  // always @ (posedge clk)
 
 `ifdef FORMAL
-  always @(*)
-    begin
-      assert(size <= STORAGE_SIZE);
-      //assert(write_en ? size : 1 == $past(write_en ? size - 1 : 1));
-    end
+  always_comb begin
+    assert (size <= StorageSize);
+    //assert(write_en ? size : 1 == $past(write_en ? size - 1 : 1));
+  end
 
-`endif // FORMAL
+`endif  // FORMAL
 endmodule

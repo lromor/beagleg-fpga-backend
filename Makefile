@@ -41,4 +41,7 @@ surelog: $(SOURCES)
 clean:
 	rm -rf $(TARGET).dfu $(TARGET).bit $(TARGET).asc $(TARGET).json
 
+verify-formal:
+	sby -t -f fifo.sby
+
 .PHONY: flash
