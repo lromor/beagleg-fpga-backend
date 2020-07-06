@@ -13,10 +13,13 @@ plot "/tmp/foo.data" using 1:3 with lines, "" using 1:4 axes x1y2
 #include <stdint.h>
 #include <stdio.h>
 #include <math.h>
+#include <algorithm>
 
 typedef double Number;   // In FPGA some large fixed point number.
 
-constexpr Number sample_hz = 1000;
+// We calculate the current position in regular intervals.
+constexpr Number sample_hz = 100'000;
+
 constexpr uint64_t motor_move_target = 1000;
 constexpr uint64_t motor_speed = 100; // unit per second.
 
@@ -51,7 +54,7 @@ public:
       const double speed = dx / dt;
       const double accel = (speed - last_speed_) / dt;
       // time pos dx/dt
-      printf("%8.3f %8.3f %8.3f %8.3f\n",
+      printf("%8.6f %8.6f %8.6f %8.6f\n",
              t,                    // t
              m.motor_pos,          // x
              speed,                // dx/dt = speed
@@ -85,7 +88,9 @@ int main(int, char *[]) {
   Number jerk_accel = 0;
   Number accel_speed = 0;
 
-  Plotter plotter(1);
+  const int points_per_seconds = 100;
+  const int subsampling = std::max((int)sample_hz/points_per_seconds, 1);
+  Plotter plotter(subsampling);
   MotorRegister motor{0};
   int last_jerk_step = 0;
   int last_accel_step = 0;
@@ -115,7 +120,8 @@ int main(int, char *[]) {
   }
   plotter.Update(motor, true);
 
-  fprintf(stderr, "Steps spent in jerk:%d accel:%d fixed-speed:%d\n",
-	  last_jerk_step, last_accel_step, last_move_step);
+  fprintf(stderr, "subsampling=%d; "
+          "Steps spent in jerk:%d accel:%d fixed-speed:%d\n",
+	  subsampling, last_jerk_step, last_accel_step, last_move_step);
   fprintf(stderr, "Final pos=%f\n", motor.motor_pos);
 }
