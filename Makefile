@@ -10,7 +10,8 @@ YOSYS?=yosys
 
 all: $(TARGET).bit
 
-beagleg-fpga-backend.json: $(SOURCES)
+# Run yosys, but also make sure we fail even on warnings.
+$(TARGET).json: $(SOURCES)
 	!($(YOSYS) -p 'read_verilog -sv $^ ; synth_ice40 -top top -json $@' 2>&1 | egrep -i "(^warning:|error:)") || rm $@
 
 # Use **nextpnr** to generate the FPGA configuration.
