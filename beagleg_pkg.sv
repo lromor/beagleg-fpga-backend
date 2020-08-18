@@ -12,16 +12,9 @@ package beagleg;
   typedef logic [MotionSegmentBits-1:0] MotionSegment;
 
   // Must match enum in beagleg-protocol.cc
-  // (comments written like that because
-  // https://github.com/google/verible/issues/336 )
   typedef enum {
-    // Get fifo free slots
-    CMD_NO_OP = 0,
-
-    // Get status word
-    CMD_STATUS = 1,
-
-    // Send segments to fifo
-    CMD_WRITE_FIFO = 2
+    CMD_NO_OP = 0,  // Get fifo free slots
+    CMD_STATUS = 1,  // Get status word
+    CMD_WRITE_FIFO = 2  // Send segments to fifo
   } command_e;
 endpackage

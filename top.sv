@@ -64,39 +64,46 @@ module top (
   assign led_red = !(empty_slots < 4);
 
   // Receive commands + data from host
-  spi_secondary spi_secondary(.clk(clk),
-                              .sck(spi_sck),
-                              .in_bit(spi_mosi),
-                              .out_bit(spi_miso),
-                              .cs(spi_cs),
-                              .data_word_received(spi_main_data_w),
-                              .data_word_to_send(spi_secondary_data_w),
-                              .word_ready(spi_main_data_ready_w));
+  spi_secondary spi_secondary (
+      .clk               (clk),
+      .sck               (spi_sck),
+      .in_bit            (spi_mosi),
+      .out_bit           (spi_miso),
+      .cs                (spi_cs),
+      .data_word_received(spi_main_data_w),
+      .data_word_to_send (spi_secondary_data_w),
+      .word_ready        (spi_main_data_ready_w)
+  );
 
   logic request_read;
   beagleg::MotionSegment fifo_step_transfer;
 
   // Motion segments are sent via this fifo to motion engine.
-  fifo #(.WordSize(FifoWordSize),
-         .RecordWords(FifoRecordWords),
-         .Depth(FifoDepth))
-   motion_segment_fifo(.clk(clk),
-                       .size(fifo_size),
-                       // Write stuff
-                       .write_en(fifo_write_en),
-                       .data_in(spi_main_data_w),
-                       // Status
-                       .full(fifo_full_w),
-                       .empty(fifo_empty_w),
-                       // Reading
-                       .read_en(request_read),
-                       .data_out(fifo_step_transfer));
+  fifo #(
+      .WordSize(FifoWordSize),
+      .RecordWords(FifoRecordWords),
+      .Depth(FifoDepth)
+  ) motion_segment_fifo (
+      .clk     (clk),
+      .size    (fifo_size),
+      // Write stuff
+      .write_en(fifo_write_en),
+      .data_in (spi_main_data_w),
+      // Status
+      .full    (fifo_full_w),
+      .empty   (fifo_empty_w),
+      // Reading
+      .read_en (request_read),
+      .data_out(fifo_step_transfer)
+  );
 
-  segment_step_generator step_gen(.clk(clk),
-                                   .data_available(~fifo_empty_w),
-                                   .data_request(request_read),
-                                   .data(fifo_step_transfer),
-                                   .step_out(system_led));
+  segment_step_generator step_gen (
+      .clk           (clk),
+      .data_available(~fifo_empty_w),
+      .data_request  (request_read),
+      .data          (fifo_step_transfer),
+      .step_out      (system_led)
+  );
 
   // The first byte decides what we're going to do.
   always_ff @(posedge clk) begin

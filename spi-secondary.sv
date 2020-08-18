@@ -5,7 +5,9 @@ module spi_secondary #(
     parameter integer WordBits = 8,
 
     // Derived
-    localparam integer WordBitSize = $clog2 (WordBits)
+    localparam integer WordBitSize = $clog2 (
+        WordBits
+    )
 ) (
     input logic clk,
 
