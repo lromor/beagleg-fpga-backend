@@ -13,8 +13,8 @@ package beagleg;
 
   // Must match enum in beagleg-protocol.cc
   typedef enum {
-    CMD_NO_OP = 0,  // Get fifo free slots
-    CMD_STATUS = 1,  // Get status word
+    CMD_NO_OP      = 0,  // Get fifo free slots
+    CMD_STATUS     = 1,  // Get status word
     CMD_WRITE_FIFO = 2  // Send segments to fifo
   } command_e;
 endpackage
