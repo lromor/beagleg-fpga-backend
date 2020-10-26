@@ -12,7 +12,7 @@ CXX?=g++
 
 LDFLAGS+=-lpthread -lm
 
-OBJECTS=utils.o
+LIB_OBJECTS=utils.o
 GENLIB=libutils.a
 
 UNITTEST_BINARIES=utils_test
@@ -20,9 +20,14 @@ TEST_FRAMEWORK_OBJECTS=gtest-all.o gmock-all.o
 
 DEPENDENCY_RULES=$(OBJECTS:=.d) $(UNITTEST_BINARIES:=.o.d)
 
-all : $(GENLIB)
+MAIN_OBJECTS=kebab2pascal
 
-$(GENLIB): $(OBJECTS)
+all : $(GENLIB) $(MAIN_OBJECTS)
+
+kebab2pascal: kebab2pascal.o
+	$(CXX) -o $@ $< $(LDFLAGS)
+
+$(GENLIB): $(LIB_OBJECTS)
 	$(AR) rcs $@ $^
 
 test: $(UNITTEST_BINARIES)

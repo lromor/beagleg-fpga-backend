@@ -1,0 +1,8 @@
+-xc++
+-std=c++17
+-stdlib=libstdc++
+-g
+-O0
+-Wall
+-I/usr/local/share/verilator/include
+-I/usr/local/share/verilator/include/vltstd
