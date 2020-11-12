@@ -10,7 +10,7 @@ CFLAGS+=-Wno-packed-bitfield-compat
 CXXFLAGS+=-std=c++17 $(CFLAGS)
 CXX?=g++
 
-LDFLAGS+=-lpthread -lm
+LDFLAGS?=
 
 LIB_OBJECTS=utils.o
 GENLIB=libutils.a
@@ -20,11 +20,11 @@ TEST_FRAMEWORK_OBJECTS=gtest-all.o gmock-all.o
 
 DEPENDENCY_RULES=$(OBJECTS:=.d) $(UNITTEST_BINARIES:=.o.d)
 
-MAIN_OBJECTS=kebab2pascal
+MAIN_OBJECTS=multi-word-converter
 
 all : $(GENLIB) $(MAIN_OBJECTS)
 
-kebab2pascal: kebab2pascal.o
+multi-word-converter: multi-word-converter.o
 	$(CXX) -o $@ $< $(LDFLAGS)
 
 $(GENLIB): $(LIB_OBJECTS)

@@ -105,8 +105,6 @@ module top (
       .step_out      (system_led)
   );
 
-  cubic_bezier cubic_bezier ();
- 
   // The first byte decides what we're going to do.
   always_ff @(posedge clk) begin
     if (spi_main_data_ready_w & (spi_cs == 0))

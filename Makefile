@@ -2,13 +2,21 @@ PCF?=tinyfpga-bx.pcf
 PNRFLAGS?=--lp8k --package cm81
 
 TARGET=beagleg-fpga-backend
-SOURCES=beagleg_pkg.sv fifo.sv spi-secondary.sv segment-step-generator.sv top.sv cubic-bezier.sv
+SOURCES=beagleg_pkg.sv fifo.sv spi-secondary.sv segment-step-generator.sv top.sv
+XLS_SOURCES=xls/cubic-bezier.sv
+SOURCES+=$(XLS_SOURCES)
 
 SURELOG?=surelog
 
 YOSYS?=yosys
 
 all: $(TARGET).bit
+
+# Compile xls generated verilog.
+$(XLS_SOURCES):
+	$(MAKE) -C xls
+
+generate-xls-sources: $(XLS_SOURCES)
 
 # Run yosys, but also make sure we fail even on warnings.
 $(TARGET).json: $(SOURCES)
@@ -45,4 +53,4 @@ clean:
 verify-formal:
 	sby -t -f fifo.sby
 
-.PHONY: flash
+.PHONY: flash generate-xls-sources
