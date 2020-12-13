@@ -14,8 +14,8 @@ module fifo #(
     // Derived
     localparam integer RecordSizeBits = WordSize * RecordWords,
     localparam integer StorageSize = Depth * RecordWords,
-    localparam integer StoragePosSize = $clog2 (StorageSize),
-    localparam integer RecordPosSize = $clog2 (RecordWords)
+    localparam integer StoragePosSize = $clog2(StorageSize),
+    localparam integer RecordPosSize = $clog2(RecordWords)
 ) (
     input logic clk,  // Input clock
 
@@ -40,8 +40,8 @@ module fifo #(
 
   // The wires of the read/write positions are a bit less because we use
   // it as indexes for the storage and they need the proper modular arithmetic.
-  wire [StorageSize-1:0] write_pos_idx_w = write_pos_r[StoragePosSize - 1:0];
-  wire [StorageSize-1:0] read_pos_idx_w = read_pos_r[StoragePosSize - 1:0];
+  wire [StorageSize-1:0] write_pos_idx_w = write_pos_r[StoragePosSize-1:0];
+  wire [StorageSize-1:0] read_pos_idx_w = read_pos_r[StoragePosSize-1:0];
 
   wire empty = (size >> RecordPosSize) == 0;
   wire full = (size == StorageSize);
@@ -54,7 +54,7 @@ module fifo #(
   generate
     genvar i;
     for (i = 0; i < RecordWords; i = i + 1)
-      assign data_out[(i + 1) * WordSize - 1:i * WordSize] = storage[read_pos_idx_w + i];
+      assign data_out[(i+1)*WordSize-1:i*WordSize] = storage[read_pos_idx_w+i];
   endgenerate
 
   // Write stuff

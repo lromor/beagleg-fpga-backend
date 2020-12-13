@@ -5,7 +5,7 @@ module spi_secondary #(
     parameter integer WordBits = 8,
 
     // Derived
-    localparam integer WordBitSize = $clog2 (WordBits)
+    localparam integer WordBitSize = $clog2(WordBits)
 ) (
     input logic clk,
 
@@ -42,17 +42,17 @@ module spi_secondary #(
       data <= data_word_to_send;
 
       // Last bit!
-      out_bit <= data_word_to_send[WordBits - 1];
+      out_bit <= data_word_to_send[WordBits-1];
     end
 
     if (rising) begin
       // Shift data_word received by one bit and include the new bit.
-      data <= {data[WordBits - 2:0], in_bit};
+      data <= {data[WordBits-2:0], in_bit};
     end  // if (rising)
 
     if (falling) begin
       // Set msb to output
-      out_bit <= data[WordBits - 1];
+      out_bit <= data[WordBits-1];
 
       // Increment the counter
       counter <= counter + 1;
