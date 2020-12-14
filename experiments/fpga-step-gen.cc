@@ -4,10 +4,17 @@
 /*
 set key autotitle columnheader
 set xlabel "seconds"
-set y2tics
+set ylabel "Position [steps]; speed [steps/sec]"
+set y2label "Acceleration [steps/sec^2]"
+set y2tics textcolor "red"
+
 set ytics nomirror
-set offsets graph 0, 1.1, 1.1, 0
-plot "/tmp/foo.data" using 1:3 with lines, "" using 1:4 axes x1y2
+set offsets graph 0, 1.0, 1.05, 0
+set style line 1 linecolor rgb "red" linewidth 1   # accel
+set style line 2 linecolor rgb "green" linewidth 4 # speed
+set style line 3 linecolor rgb "blue" linewidth 4  # pos
+
+plot "/tmp/s.dat" using 1:2 with lines ls 3, "" using 1:3 with lines ls 2, "" using 1:4 with lines ls 1 axes x1y2
 */
 
 #include <stdint.h>
@@ -18,10 +25,7 @@ plot "/tmp/foo.data" using 1:3 with lines, "" using 1:4 axes x1y2
 typedef double Number;   // In FPGA some large fixed point number.
 
 // We calculate the current position in regular intervals.
-constexpr Number sample_hz = 100'000;
-
-constexpr uint64_t motor_move_target = 1000;
-constexpr uint64_t motor_speed = 100; // unit per second.
+constexpr Number sample_hz = 50'000;
 
 struct MotorRegister {
   // fractiontional motor pos; for software simulation for now just
@@ -79,9 +83,12 @@ private:
 int main(int, char *[]) {
   MotorRequest request;
 
-  request.jerk = 1 / (sample_hz*sample_hz*sample_hz);
+  request.jerk = 1.0 / (sample_hz*sample_hz*sample_hz);
   request.target_accel = 10.0 / (sample_hz*sample_hz);
   request.linear_speed = 100.0 / sample_hz;
+
+  fprintf(stderr, "Request jerk=%g target_accel=%g linear_speed=%g\n",
+          request.jerk, request.target_accel, request.linear_speed);
 
   request.move_units = 1000.0;
 
@@ -104,8 +111,8 @@ int main(int, char *[]) {
       jerk_accel += request.jerk;
 
       last_jerk_step = step;
-    } else
-    if (accel_speed < request.linear_speed) {  // get speed to target
+    }
+    else if (accel_speed < request.linear_speed) {  // get speed to target
       motor.motor_pos += accel_speed;
       accel_speed += request.target_accel;   // increase speed
 
