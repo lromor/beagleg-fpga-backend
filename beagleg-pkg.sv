@@ -1,6 +1,5 @@
-// Definitions relevant for the implementation, and in
 // particular shared with the host side.
-package beagleg;
+package beagleg_pkg;
   // Yosys not supported yet: $bits() yet, so we can't just
   // define the type then determine its size.
   // So we do it the other way around :)

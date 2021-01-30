@@ -4,7 +4,7 @@ module __cubic_bezier_private__main(
   input wire [22:0] a,
   input wire [22:0] b,
   input wire [22:0] c,
-  output wire [73:0] out
+  output wire [23:0] out
 );
   // lint_off SIGNED_TYPE
   // lint_off MULTIPLY
@@ -100,26 +100,26 @@ module __cubic_bezier_private__main(
   wire [33:0] p1_x2_comb;
   wire [56:0] p1_p2_comb;
   wire [39:0] p1_p1_comb;
-  wire [40:0] p1_bit_slice_99_comb;
+  wire [40:0] p1_bit_slice_103_comb;
   wire [50:0] p1_x3_comb;
-  wire [41:0] p1_add_84_comb;
+  wire [41:0] p1_add_86_comb;
   wire [73:0] p1_p3_comb;
-  wire [57:0] p1_add_96_comb;
-  wire [73:0] p1_concat_98_comb;
+  wire [57:0] p1_add_98_comb;
+  wire [23:0] p1_bit_slice_101_comb;
   assign p1_x2_comb = smul34b_17b_x_17b(p0_x, p0_x);
   assign p1_p2_comb = smul57b_23b_x_34b(p0_b, p1_x2_comb);
   assign p1_p1_comb = smul40b_23b_x_17b(p0_a, p0_x);
-  assign p1_bit_slice_99_comb = p1_p2_comb[56:16];
+  assign p1_bit_slice_103_comb = p1_p2_comb[56:16];
   assign p1_x3_comb = smul51b_34b_x_17b(p1_x2_comb, p0_x);
-  assign p1_add_84_comb = {{2{p1_p1_comb[39]}}, p1_p1_comb} + {{1{p1_bit_slice_99_comb[40]}}, p1_bit_slice_99_comb};
+  assign p1_add_86_comb = {{2{p1_p1_comb[39]}}, p1_p1_comb} + {{1{p1_bit_slice_103_comb[40]}}, p1_bit_slice_103_comb};
   assign p1_p3_comb = smul74b_23b_x_51b(p0_c, p1_x3_comb);
-  assign p1_add_96_comb = {p1_add_84_comb, p1_p2_comb[15:0]} + p1_p3_comb[73:16];
-  assign p1_concat_98_comb = {p1_add_96_comb, p1_p3_comb[15:0]};
+  assign p1_add_98_comb = {p1_add_86_comb, p1_p2_comb[15:0]} + p1_p3_comb[73:16];
+  assign p1_bit_slice_101_comb = p1_add_98_comb[57:34];
 
   // Registers for pipe stage 1:
-  reg [73:0] p1_concat_98;
+  reg [23:0] p1_bit_slice_101;
   always_ff @ (posedge clk) begin
-    p1_concat_98 <= p1_concat_98_comb;
+    p1_bit_slice_101 <= p1_bit_slice_101_comb;
   end
-  assign out = p1_concat_98;
+  assign out = p1_bit_slice_101;
 endmodule

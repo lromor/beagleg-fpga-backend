@@ -16,7 +16,8 @@ CFLAGS+=-Wall \
 CXXFLAGS+=-std=c++17 $(CFLAGS)
 CXX?=g++
 
-VERILATOR_TARGETS=
+SV_SOURCES=../beagleg-pkg.sv ../spi-secondary.sv ../segment-step-generator.sv ../fifo.sv ../top.sv
+VERILATOR_TARGETS=$(basename $(notdir $(SV_SOURCES)))
 VERILATOR_DEPS:=$(VERILATOR_TARGETS:%=lib%-module.a) $(VERILATOR_TARGETS:%=%-module.h)
 VERILATOR_DEPS:=$(addprefix $(VOUT_DIR)/, $(VERILATOR_DEPS))
 
@@ -27,7 +28,7 @@ VERILATOR_XLS_DEPS:=$(addprefix $(VOUT_DIR)/, $(VERILATOR_XLS_DEPS))
 COMMON_LIBS=ice40-primitives/libice40dpi.a
 MWC=../utils/multi-word-converter
 
-TARGETS=cubic-bezier_test
+TARGETS=cubic-bezier_test libhsgsim.a
 
 all: verilated-deps $(TARGETS)
 
@@ -39,7 +40,7 @@ generate-xls-sources:
 
 $(VOUT_DIR)/lib%-module.a $(VOUT_DIR)/%-module.h: $(VERILOG_SRC_PATH)/%.sv $(MWC)
 	$(eval PASCAL_NAME:=$(shell $(MWC) dash pascal $*))
-	$(VERILATOR) $(VINCLUDE) $(VFLAGS) --Mdir $(VOUT_DIR) --prefix V$(PASCAL_NAME) --cc $<
+	$(VERILATOR) $(VINCLUDE) $(VFLAGS) --Mdir $(VOUT_DIR) --prefix V$(PASCAL_NAME) --cc $(SV_SOURCES)
 	$(MAKE) -C $(VOUT_DIR) -f ../../utils/AppendVkObj.mk -f V$(PASCAL_NAME).mk default
 	mv $(VOUT_DIR)/V$(PASCAL_NAME)__ALL.a $(VOUT_DIR)/lib$*-module.a
 	mv $(VOUT_DIR)/V$(PASCAL_NAME).h $(VOUT_DIR)/$*-module.h
@@ -60,6 +61,9 @@ verilated-deps: generate-xls-sources $(VERILATOR_DEPS) $(VERILATOR_XLS_DEPS)
 
 cubic-bezier_test: cubic-bezier_test.o $(VOUT_DIR)/xls/libcubic-bezier-module.a $(COMMON_LIBS)
 	$(CXX) -o $@  $^ $(LDFLAGS)
+
+libhsgsim.a: hsg-sim.o $(VOUT_DIR)/libtop-module.a
+	$(AR) rcs $@ $^
 
 $(MWC):
 	$(MAKE) -C ../utils multi-word-converter

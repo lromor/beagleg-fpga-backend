@@ -15,6 +15,10 @@ that emulates the host and the internal IP of the ice40.
 The SPI ip module is controlled via a verilog primitive `SB_SPI`
 ([here][ice40-primitives] you can find the datasheet).
 
+# Linking
+
+As pointed out ![here](https://github.com/verilator/verilator/issues/2317#issuecomment-626054278), the best way to deal with large projects is to generate separate `libxxx__ALL.a` for each module and link them toghether.
+
 ## Run sim
 
 To run the current simulation execute in a terminal `make run`.

@@ -45,9 +45,9 @@ int main(int argc, char *argv[]) {
   // Create an instance of our module under test
   VCubicBezier *tb = new VCubicBezier();
 
-  double kC1 = 28;
-  double kC2 = -2.5;
-  double kC3 = 1.0;
+  double kC1 = 190;
+  double kC2 = -232;
+  double kC3 = -2;
 
   double kA = 3 * kC1; // width: 16 + 2
   double kB = 3 * (kC2 - 2 * kC1); // width = 16 + 1 + 3
@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
   for (unsigned i = 0; i < MAX_X; ++i) {
     tb->x = i;
     step_sim(tb);
-    std::cout << data2hex(&tb->x, 3) << " " << data2hex(tb->out, 10) << std::endl;
+    std::cout << data2hex(&tb->x, 3) << " " << data2hex(&tb->out, 10) << std::endl;
   }
 
   return 0;

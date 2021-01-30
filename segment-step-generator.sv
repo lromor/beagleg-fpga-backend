@@ -5,7 +5,7 @@ module segment_step_generator #(
 
     input logic data_available,
     output logic data_request,
-    input logic [beagleg::MotionSegmentBits-1:0] data,  // Yosys !understand beagleg::MotionSegment
+    input logic [beagleg_pkg::MotionSegmentBits-1:0] data,  // Yosys !understand beagleg::MotionSegment
 
     output logic step_out
 );
@@ -17,8 +17,8 @@ module segment_step_generator #(
 
   // In the lower parts, we have the fast counting bits with
   // system clock frequency; we output the step frequency at that point.
-  logic [beagleg::MotionSegmentBits + PrescaleBits - 1:0] countdown_register;
-  assign step_out = countdown_register[PrescaleBits-1];
+  logic [beagleg_pkg::MotionSegmentBits + PrescaleBits - 1:0] countdown_register;
+  assign step_out = countdown_register[PrescaleBits - 1];
 
   state_e state;
   initial begin

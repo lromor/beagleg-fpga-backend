@@ -17,10 +17,9 @@ module top (
     output logic p7,
     output logic p8
 );
-
   localparam integer FifoWordSize = 8;
   // TODO: how can we assert that bits % FifoWordSize == 0 ?
-  localparam integer FifoRecordWords = beagleg::MotionSegmentBits / FifoWordSize;
+  localparam integer FifoRecordWords = beagleg_pkg::MotionSegmentBits / FifoWordSize;
   localparam integer FifoDepth = 16;
 
   typedef enum {
@@ -76,7 +75,7 @@ module top (
   );
 
   logic request_read;
-  beagleg::MotionSegment fifo_step_transfer;
+  beagleg_pkg::MotionSegment fifo_step_transfer;
 
   // Motion segments are sent via this fifo to motion engine.
   fifo #(
@@ -112,8 +111,8 @@ module top (
         STATE_IDLE: begin
           // Read op
           case (spi_main_data_w)
-            beagleg::CMD_STATUS: state <= STATE_IDLE;  // No-op
-            beagleg::CMD_WRITE_FIFO: state <= STATE_RECEIVE_SEGMENTS;
+            beagleg_pkg::CMD_STATUS: state <= STATE_IDLE;  // No-op
+            beagleg_pkg::CMD_WRITE_FIFO: state <= STATE_RECEIVE_SEGMENTS;
             default: state <= STATE_IDLE;
           endcase  // case (spi_main_data_w)
         end
