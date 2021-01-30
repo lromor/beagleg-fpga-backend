@@ -33,7 +33,7 @@ format: $(SOURCES)
 	verible-verilog-format --inplace $^
 
 lint: $(SOURCES)
-	verible-verilog-lint --rules_config=.rules.verible_lint $^
+	verible-verilog-lint --rules_config_search $^
 
 # test-run with surelog to see if there are more error messages.
 surelog: $(SOURCES)
