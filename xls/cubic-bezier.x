@@ -17,7 +17,7 @@ import std
 // The total amount of of bits required is provided by the largest multiplication
 // which is c * x ** 3. The amount of bits required is
 // 23 + 51 = 74.
-fn main(x: sN[17], a: sN[23], b: sN[23], c: sN[23]) ->sN[24] {
+fn main(x: sN[17], a: sN[23], b: sN[23], c: sN[23]) ->sN[74] {
     let x2: sN[34] = std::smul(x, x); // 1:1:32
     let x3: sN[51] = std::smul(x2, x); // 1:2:48
 
@@ -35,5 +35,5 @@ fn main(x: sN[17], a: sN[23], b: sN[23], c: sN[23]) ->sN[24] {
 
     // This doesn't need any shift.
     let p3: sN[74] = std::smul(c, x3);
-    (p1 + p2 + p3)[50:74] as sN[24]
+    p1 + p2 + p3
 }
