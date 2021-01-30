@@ -17,7 +17,7 @@ The SPI ip module is controlled via a verilog primitive `SB_SPI`
 
 # Linking
 
-As pointed out ![here](https://github.com/verilator/verilator/issues/2317#issuecomment-626054278), the best way to deal with large projects is to generate separate `libxxx__ALL.a` for each module and link them toghether.
+As pointed out [here](https://github.com/verilator/verilator/issues/2317#issuecomment-626054278), the best way to deal with large projects is to generate separate `libxxx__ALL.a` for each module and link them toghether.
 
 ## Run sim
 
