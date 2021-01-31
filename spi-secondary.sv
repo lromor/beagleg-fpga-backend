@@ -20,7 +20,7 @@ module spi_secondary #(
     output logic [WordBits-1:0] data_word_received,  // data just received
     input logic [WordBits-1:0] data_word_to_send  // data to send in next word
 );
-  logic [WordBits-1:0] data;  // Register of size WordBits + 1.
+  logic [WordBits-1:0] data = 0;  // Register of size WordBits + 1.
 
   // Count how many bits we received.
   // One bit for the overflow to see when byte is full.

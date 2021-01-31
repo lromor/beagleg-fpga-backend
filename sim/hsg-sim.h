@@ -3,6 +3,7 @@
 
 #include "verilator-generated/top-module.h"
 #include <verilated.h>
+#include <verilated_vcd_c.h>
 
 class StepGeneratorModuleSim {
 public:
@@ -10,6 +11,7 @@ public:
   // At some point we might want to setup some threads etc..
   static StepGeneratorModuleSim *Init(int argc, char **argv) {
     Verilated::commandArgs(argc, argv);
+    Verilated::traceEverOn(true);
     return new StepGeneratorModuleSim();
   }
 
@@ -19,21 +21,34 @@ public:
   bool SendReceive(const void *send, void *receive, size_t len,
                    bool is_last_in_transaction = true);
 
-  void Cycle(int n = 1) {
-    for (int i = 0; i < n; ++i) {
-      top_.clk = ~top_.clk;
-      top_.eval();
-      top_.clk = ~top_.clk;
-      top_.eval();
-    }
+  void Tick() {
+    top_.clk = 0;
+    top_.eval();
+    trace_.dump(10 * ticks_);
+    top_.clk = 1;
+    top_.eval();
+    trace_.dump(10 * ticks_ + 5);
+    ticks_++;
+    trace_.flush();
+  }
+
+  void Cycle(unsigned n = 1) {
+    for (unsigned i = 0; i < n; ++i)
+      Tick();
   }
 
 private:
-  StepGeneratorModuleSim() {
+  StepGeneratorModuleSim() : ticks_(0) {
+    // Trace 99 levels of hierarchy
+    top_.trace(&trace_, 99);
+    trace_.open("trace.vcd");
     top_.spi_cs = 1;
-    Cycle();
+    Tick();
   }
+
+  VerilatedVcdC trace_;
   VTop top_;
+  unsigned long ticks_;
 };
 
 

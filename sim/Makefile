@@ -1,4 +1,4 @@
-VFLAGS?=-Wno-lint
+VFLAGS?=-Wno-lint --trace
 VINCLUDE?=-Iice40-primitives
 VERILOG_SRC_PATH=..
 VERILATOR?=verilator
@@ -8,7 +8,7 @@ VERILATOR_INCLUDE?=$(shell dirname `which verilator`)/../share/verilator/include
 # foo.c:5: note: Offset of packed bit-field 'b' has changed in GCC 4.4
 # https://gcc.gnu.org/gcc-4.4/changes.html
 CFLAGS+=-Wno-packed-bitfield-compat
-CFLAGS+=-Wall \
+CFLAGS+=-Wall -g -O0 \
 	-I$(VERILATOR_INCLUDE) \
 	-I$(VERILATOR_INCLUDE)/vltstd \
 	-I../utils
@@ -63,7 +63,7 @@ cubic-bezier_test: cubic-bezier_test.o $(VOUT_DIR)/xls/libcubic-bezier-module.a 
 	$(CXX) -o $@  $^ $(LDFLAGS)
 
 libhsgsim.a: hsg-sim.o $(VOUT_DIR)/libtop-module.a
-	$(AR) rcs $@ $< $(VOUT_DIR)/VTop__ALL.o
+	$(AR) rcs $@ $< $(VOUT_DIR)/VTop__ALL.o $(VOUT_DIR)/verilated.o $(VOUT_DIR)/verilated_vcd_c.o
 
 $(MWC):
 	$(MAKE) -C ../utils multi-word-converter

@@ -123,6 +123,6 @@ module top (
       endcase
 
     // Reset the fsm state to idle.
-    if (spi_cs) state <= 0;
+    if (spi_cs) state <= STATE_IDLE;
   end
 endmodule
