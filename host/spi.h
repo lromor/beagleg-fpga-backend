@@ -3,8 +3,11 @@
 #ifndef SPI_HOST_H
 #define SPI_HOST_H
 
+#include <cassert>
 #include <stdint.h>
 #include <string>
+#include "../sim/hsg-sim.h"
+#include <iostream>
 
 class SPIHost {
 public:
@@ -15,7 +18,10 @@ public:
         bool verbose = false;
     };
 
-    SPIHost() : fd_(-1) {}
+    SPIHost() : fd_(-1), m_(NULL) {
+        m_ = StepGeneratorModuleSim::Init(0, NULL);
+    }
+
     ~SPIHost();
 
     // Connect to given device, e.g. "/dev/spidev0.0".
@@ -30,6 +36,7 @@ public:
 private:
     int fd_;
     struct Options options_;
+    StepGeneratorModuleSim * m_;
 };
 
 #endif  // SPI_HOST_H

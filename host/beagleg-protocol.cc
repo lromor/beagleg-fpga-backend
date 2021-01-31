@@ -180,6 +180,8 @@ int main(int argc, char *argv[]) {
     options.speed_hz = 500'000;  // Let's be slow for now
     options.verbose = true;
 
+    fprintf(stderr, "CREATED\n");
+
     SPIHost spi;
     if (!spi.Connect(device, options)) {
         fprintf(stderr, "Couldn't connect to SPI bus %s (change with -D)\n", device);
