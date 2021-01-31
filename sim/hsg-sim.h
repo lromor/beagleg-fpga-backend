@@ -8,7 +8,7 @@ class StepGeneratorModuleSim {
 public:
   // Used to initialize the verilator simulation.
   // At some point we might want to setup some threads etc..
-  StepGeneratorModuleSim *Init(int argc, char **argv) {
+  static StepGeneratorModuleSim *Init(int argc, char **argv) {
     Verilated::commandArgs(argc, argv);
     return new StepGeneratorModuleSim();
   }
@@ -16,15 +16,23 @@ public:
   // Takes care of sending size bytes of data.
   // The received payload is pointed from *out.
   // The size of the received payload is returned.
-  size_t SendReceive(void *data, size_t size, void *received);
+  bool SendReceive(const void *send, void *receive, size_t len,
+                   bool is_last_in_transaction = true);
 
-  void Cycle() {
-    top_.clk = ~top_.clk;
-    top_.eval();
+  void Cycle(int n = 1) {
+    for (int i = 0; i < n; ++i) {
+      top_.clk = ~top_.clk;
+      top_.eval();
+      top_.clk = ~top_.clk;
+      top_.eval();
+    }
   }
 
 private:
-  StepGeneratorModuleSim() {}
+  StepGeneratorModuleSim() {
+    top_.spi_cs = 1;
+    Cycle();
+  }
   VTop top_;
 };
 

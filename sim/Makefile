@@ -63,7 +63,7 @@ cubic-bezier_test: cubic-bezier_test.o $(VOUT_DIR)/xls/libcubic-bezier-module.a 
 	$(CXX) -o $@  $^ $(LDFLAGS)
 
 libhsgsim.a: hsg-sim.o $(VOUT_DIR)/libtop-module.a
-	$(AR) rcs $@ $^
+	$(AR) rcs $@ $< $(VOUT_DIR)/VTop__ALL.o
 
 $(MWC):
 	$(MAKE) -C ../utils multi-word-converter
