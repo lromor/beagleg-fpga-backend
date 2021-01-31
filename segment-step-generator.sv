@@ -1,5 +1,5 @@
 module segment_step_generator #(
-    parameter integer PrescaleBits = 23
+    parameter integer PrescaleBits = 1
 ) (
     input logic clk,
 
