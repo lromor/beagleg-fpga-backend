@@ -44,7 +44,7 @@ module fifo #(
   wire [StorageSize-1:0] read_pos_idx_w = read_pos_r[StoragePosSize-1:0];
 
   assign empty = (size >> RecordPosSize) == 0;
-  assign full = (size == StorageSize);
+  assign full  = (size == StorageSize);
   wire do_write_w = write_en && !full;
   wire do_read_w = read_en && !empty;
 
