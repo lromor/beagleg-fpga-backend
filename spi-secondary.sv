@@ -10,10 +10,10 @@ module spi_secondary #(
     input logic clk,
 
     // External interface
-    input  logic sck,  // clock
-    input  logic in_bit,  // main out secondary in bit
+    input logic sck,  // clock
+    input logic in_bit,  // main out secondary in bit
     output logic out_bit,  // main in secondary out bit
-    input  logic cs,  // channel select
+    input logic cs,  // channel select
 
     // Bus interface
     output logic word_ready,  // New word received and setting the output with to_send

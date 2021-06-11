@@ -14,6 +14,6 @@ package beagleg_pkg;
   typedef enum {
     CMD_NO_OP      = 0,  // Get fifo free slots
     CMD_STATUS     = 1,  // Get status word
-    CMD_WRITE_FIFO = 2  // Send segments to fifo
+    CMD_WRITE_FIFO = 2   // Send segments to fifo
   } command_e;
 endpackage
