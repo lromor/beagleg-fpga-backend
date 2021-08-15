@@ -12,11 +12,11 @@ set_io spi_miso A9     # Pin 18
 set_io spi_sck B8      # Pin 19
 set_io spi_cs A8       # Pin 20
 
-set_io p1 A2
-set_io p2 A1
-set_io p3 B1
-set_io p4 C2
-set_io p5 C1
-set_io p6 D2
-set_io p7 D1
-set_io p8 E2
+set_io p1 A2    # Pin 1
+set_io p2 A1    # Pin 2
+set_io p3 B1    # Pin 3
+set_io p4 C2    # Pin 4
+set_io p5 C1    # Pin 5
+set_io p6 D2    # Pin 6
+set_io p7 D1    # Pin 7
+set_io p8 E2    # Pin 8
