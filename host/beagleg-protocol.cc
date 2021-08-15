@@ -10,16 +10,20 @@
 #include <algorithm>
 
 // Instead of SPI over the wire, send to Verilator simulation.
-#define USE_SIMULATION 0
+#define USE_SIMULATION 1
 
 #if USE_SIMULATION
 #  include "../sim/hsg-sim.h"
 #endif
 
-// The protocol elements. Right now just pretend
+// The protocol elements.
+//   beagleg/src/motion-queue.h will be the real deal.
+// For now just keeping in sync with
+//   ../beagleg-pkg.sv  motion_segment_t
 namespace beagleg {
 struct MotionSegment {
-  uint32_t count_steps;    // see beagleg/src/motion-queue.h for real deal.
+  uint32_t sample_count;
+  uint32_t delta_distance_per_sample;
 };
 
 struct QueueStatus {
@@ -136,34 +140,56 @@ static void print_status(const beagleg::QueueStatus &status) {
   printf("Status: counter:%d; index:%d\n", status.counter, status.index);
 }
 
-static void ReadSegmentSteps(TerminalInput *terminal, beagleg::MotionSegment *segment) {
-  printf("How many steps: ");
+static void ReadNumber(TerminalInput *terminal, const char *prompt, uint32_t *out) {
+  printf("%s", prompt);
   fflush(stdout);
   char k;
 
-  segment->count_steps = 0;
+  // For now, just integer
+  *out = 0;
   while ((k = terminal->read_char()) != '\n') {
     if (k >= '0' && k <= '9') {
       write(STDOUT_FILENO, &k, 1);
-      segment->count_steps = segment->count_steps * 10 + (k - '0');
+      *out = *out * 10 + (k - '0');
     } else {
       k = '\007';  // beep.
       write(STDOUT_FILENO, &k, 1);
     }
   }
-  printf(" \u2713\n");
+  printf(" \u2713\n");  // checkmark.
+}
+
+static void ReadSegment(TerminalInput *terminal, beagleg::MotionSegment *segment) {
+  uint32_t distance;
+  for (bool data_valid = false; !data_valid; /**/) {
+    ReadNumber(terminal, "Duration in samples:  ", &segment->sample_count);
+    ReadNumber(terminal, "Total Steps moved: ", &distance);
+    data_valid = (segment->sample_count > 0
+                  && distance < segment->sample_count / 2);
+    if (!data_valid) {
+      fprintf(stderr, "This would result in too fast step frequency. "
+              "Use less steps or longer duration.\nRetry: ");
+    }
+  }
+
+  // Fixed point calculation
+  distance <<= 16;
+  segment->delta_distance_per_sample = (distance / segment->sample_count);
+  const double delta_distance = segment->delta_distance_per_sample / 65535.0;
+  printf("Duration %d (0x%08x) - delta-distance %.6f (0x%x.%04x)"
+         "- final distance (0x%x.%04x)\n",
+         segment->sample_count, segment->sample_count,
+         delta_distance,
+         segment->delta_distance_per_sample >> 16,
+         segment->delta_distance_per_sample & 0xffff,
+         (segment->delta_distance_per_sample * segment->sample_count) >> 16,
+         (segment->delta_distance_per_sample * segment->sample_count) & 0xffff);
 }
 
 static void SendSegment(const beagleg::MotionSegment &segment, BeagleGSPIProtocol *protocol) {
   const int segments_written = protocol->SendMotionSegments(&segment, 1);
   if (segments_written) {
-    // Also write it in hex to better see the endianness we send over the wire.
-    printf("Wrote segment with %d steps (that is 0x%02X·%02X·%02X·%02X hex)\n",
-           segment.count_steps,
-           (segment.count_steps >> 24) & 0xFF,
-           (segment.count_steps >> 16) & 0xFF,
-           (segment.count_steps >> 8) & 0xFF,
-           (segment.count_steps >> 0) & 0xFF);
+    printf("Wrote segment.\n");
   } else {
     printf("FIFO full. Didn't write segment\n");
   }
@@ -214,7 +240,8 @@ int main(int argc, char *argv[]) {
   static constexpr char nothing_to_do[] = "¯\\_(ツ)_/¯";
 
   beagleg::MotionSegment segment;
-  segment.count_steps = 3;
+  segment.sample_count = 100;
+  segment.delta_distance_per_sample = (10 << 16) / 100;  // 10 steps.
   beagleg::QueueStatus status;
   BeagleGSPIProtocol protocol(&spi);
   TerminalInput terminal;
@@ -234,13 +261,13 @@ int main(int argc, char *argv[]) {
       break;
 
     case 'w':
-      ReadSegmentSteps(&terminal, &segment);
+      ReadSegment(&terminal, &segment);
       SendSegment(segment, &protocol);
       break;
 
     case 'W':
       // Send previously read segment.
-      fprintf(stderr, "Sending %d steps\n", segment.count_steps);
+      fprintf(stderr, "Sending previous segment\n");
       SendSegment(segment, &protocol);
       break;
 

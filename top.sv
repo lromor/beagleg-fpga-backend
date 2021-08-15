@@ -9,8 +9,8 @@ module top (
     input  logic spi_cs,
     output logic spi_miso,
     output logic p1,
-    output logic p2
-    //output logic p3,
+    output logic p2,
+    output logic p3
     //output logic p4,
     //output logic p5,
     //output logic p6,
@@ -75,7 +75,7 @@ module top (
   );
 
   logic request_read;
-  beagleg_pkg::MotionSegment fifo_step_transfer;
+  beagleg_pkg::motion_segment_t fifo_step_transfer;
 
   // Motion segments are sent via this fifo to motion engine.
   fifo #(
@@ -96,14 +96,25 @@ module top (
       .data_out(fifo_step_transfer)
   );
 
-  segment_step_generator #(
-      .PrescaleBits(3)
-  ) step_gen (
-      .clk           (clk),
-      .data_available(~fifo_empty_w),
-      .data_request  (request_read),
-      .data          (fifo_step_transfer),
-      .step_out      (p1)
+  logic stepper_sample_clock;
+
+  clock_scaler #(
+      //.ScaleFactor(16_000_000 / 50_000)  // We want about 50 kHz
+      .ScaleFactor(10)
+  ) stepper_sample_generator (
+      .clk(clk),
+      .scaled_clk(stepper_sample_clock)
+  );
+
+
+  segment_step_generator #() step_gen (
+      .clk              (clk),
+      .step_sampling_clk(stepper_sample_clock),
+      .data_available   (~fifo_empty_w),
+      .data_request     (request_read),
+      .data             (fifo_step_transfer),
+      .step_out         (p1),
+      .is_busy          (p3)
   );
 
   // Debug output

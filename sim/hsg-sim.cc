@@ -41,5 +41,9 @@ bool StepGeneratorModuleSim::SendReceive(const void *send, void *receive, size_t
     top_.spi_cs = 1;
     Cycle(1000);  // TODO: make that dependent on step generator idle output
   }
+
+  while (top_.p3) {  // connected to is_busy from step_gen
+    Cycle(1000);
+  }
   return true;
 }

@@ -1,54 +1,57 @@
 module segment_step_generator #(
-    parameter integer PrescaleBits = 0
 ) (
-    input logic clk,
-    input logic data_available,
-    output logic data_request,
-    input logic [beagleg_pkg::MotionSegmentBits-1:0] data, // Yosys !like beagleg::MotionSegment
+    input  logic                         clk,
+    input  logic                         step_sampling_clk,
+    input  logic                         data_available,
+    output logic                         data_request,
+    input  beagleg_pkg::motion_segment_t data,
 
-    output logic step_out
+    output logic step_out,
+    output logic is_busy
 );
 
   typedef enum {
-    STATE_WAIT,
-    STATE_EXECUTE
+    STATE_IDLE,
+    STATE_MOVEMENT
   } state_e;
 
-  // In the lower parts, we have the fast counting bits with
-  // system clock frequency; we output the step frequency at that point.
-  logic [beagleg_pkg::MotionSegmentBits + PrescaleBits - 1:0] countdown_register;
-  assign step_out = countdown_register[PrescaleBits];
+  // Position of the stepper motor, updated with each step sample clk.
+  // This is a 16.16 fixed point value, so the actual position is at
+  // 31:16.
+  logic [31:0] position_accumulator;
+
+  // The step binary output needs to go through one full cycle for each one
+  // step update, so we look at the position one right to it.
+  assign step_out = position_accumulator[15];
 
   state_e state;
+  assign is_busy = (state == STATE_MOVEMENT);
+
   initial begin
-    state = STATE_WAIT;
-    countdown_register = 0;
+    state = STATE_IDLE;
+    position_accumulator = 0;
   end
 
-  always_ff @(posedge clk) begin
-    case (state)
-      STATE_WAIT: begin
-        if (data_available) begin
-          // available actually means, we can read the data
-          // right now.
-          countdown_register <= (data << (PrescaleBits + 1));
-          data_request <= 1'b1;
-          state <= STATE_EXECUTE;
-        end else begin
-          data_request <= 1'b0;
-          state <= STATE_WAIT;
-          countdown_register <= 0;
-        end
-      end
+  beagleg_pkg::motion_segment_t current;
 
-      STATE_EXECUTE: begin
-        data_request <= 1'b0;
-        // Still 1, about to change to 0 in next step
-        state <= (countdown_register == 1) ? STATE_WAIT : STATE_EXECUTE;
-        countdown_register <= countdown_register - 1;
-      end
+  // TODO: what we actually want is to load the current data with clk
+  // speed, so that we can take data off from the fifo as soon as possible
 
-      default: state <= STATE_WAIT;
-    endcase  // case (state)
+  always_ff @(posedge step_sampling_clk) begin
+    if (state == STATE_IDLE && data_available) begin
+      current <= data;
+      position_accumulator <= 0;
+      data_request <= 1'b1;
+      state <= STATE_MOVEMENT;
+    end else if (state == STATE_MOVEMENT) begin
+      position_accumulator <= position_accumulator + current.delta_distance_per_sample;
+      current.sample_count <= current.sample_count - 1;
+      if (current.sample_count == 1) begin
+        position_accumulator <= 0;
+        state <= STATE_IDLE;
+      end
+    end else begin
+      data_request <= 1'b0;
+    end
   end
 endmodule
