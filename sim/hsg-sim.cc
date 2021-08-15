@@ -39,7 +39,7 @@ bool StepGeneratorModuleSim::SendReceive(const void *send, void *receive, size_t
 
   if (is_last_in_transaction) {
     top_.spi_cs = 1;
-    Cycle(100);
+    Cycle(1000);  // TODO: make that dependent on step generator idle output
   }
   return true;
 }

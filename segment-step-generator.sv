@@ -2,10 +2,9 @@ module segment_step_generator #(
     parameter integer PrescaleBits = 0
 ) (
     input logic clk,
-
     input logic data_available,
     output logic data_request,
-    input logic [beagleg_pkg::MotionSegmentBits-1:0] data,  // Yosys !like beagleg::MotionSegment
+    input logic [beagleg_pkg::MotionSegmentBits-1:0] data, // Yosys !like beagleg::MotionSegment
 
     output logic step_out
 );

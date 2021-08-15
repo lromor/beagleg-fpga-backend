@@ -2,7 +2,7 @@ PCF?=tinyfpga-bx.pcf
 PNRFLAGS?=--lp8k --package cm81
 
 TARGET=beagleg-fpga-backend
-MANUAL_SOURCES=beagleg-pkg.sv fifo.sv spi-secondary.sv segment-step-generator.sv top.sv
+MANUAL_SOURCES=beagleg-pkg.sv fifo.sv spi-secondary.sv segment-step-generator.sv clock-scaler.sv top.sv
 XLS_SOURCES=xls/cubic-bezier.sv
 SOURCES=$(MANUAL_SOURCES) $(XLS_SOURCES)
 

@@ -16,7 +16,8 @@ CFLAGS+=-Wall -g -O0 \
 CXXFLAGS+=-std=c++17 $(CFLAGS)
 CXX?=g++
 
-SV_SOURCES=../beagleg-pkg.sv ../spi-secondary.sv ../segment-step-generator.sv ../fifo.sv ../top.sv
+SV_SOURCES=../beagleg-pkg.sv ../spi-secondary.sv ../segment-step-generator.sv ../fifo.sv ../clock-scaler.sv ../top.sv
+
 VERILATOR_TARGETS=$(basename $(notdir $(SV_SOURCES)))
 VERILATOR_DEPS:=$(VERILATOR_TARGETS:%=lib%-module.a) $(VERILATOR_TARGETS:%=%-module.h)
 VERILATOR_DEPS:=$(addprefix $(VOUT_DIR)/, $(VERILATOR_DEPS))
@@ -60,6 +61,9 @@ verilated-deps: generate-xls-sources $(VERILATOR_DEPS) $(VERILATOR_XLS_DEPS)
 	$(CXX) $(CXXFLAGS)  -c  $< -o $@
 
 cubic-bezier_test: cubic-bezier_test.o $(VOUT_DIR)/xls/libcubic-bezier-module.a $(COMMON_LIBS)
+	$(CXX) -o $@  $^ $(LDFLAGS)
+
+clock-scaler_test: clock-scaler_test.o libhsgsim.a
 	$(CXX) -o $@  $^ $(LDFLAGS)
 
 libhsgsim.a: hsg-sim.o $(VOUT_DIR)/libtop-module.a
