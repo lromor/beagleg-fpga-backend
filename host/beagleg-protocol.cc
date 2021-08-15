@@ -9,7 +9,12 @@
 
 #include <algorithm>
 
-#include "../sim/hsg-sim.h"
+// Instead of SPI over the wire, send to Verilator simulation.
+#define USE_SIMULATION 0
+
+#if USE_SIMULATION
+#  include "../sim/hsg-sim.h"
+#endif
 
 // The protocol elements. Right now just pretend
 namespace beagleg {
@@ -166,7 +171,6 @@ static void SendSegment(const beagleg::MotionSegment &segment, BeagleGSPIProtoco
 
 
 int main(int argc, char *argv[]) {
-  const bool use_simulation = true;  // TODO: make flag.
   const char *device = "/dev/spidev0.0";
   int opt;
 
@@ -183,9 +187,12 @@ int main(int argc, char *argv[]) {
   options.speed_hz = 500'000;  // Let's be slow for now
   options.verbose = true;
 
-  SPIHost spi(use_simulation
-              ? StepGeneratorModuleSim::Init(argc, argv)
-              : nullptr);
+#if USE_SIMULATION
+  SPIHost spi(StepGeneratorModuleSim::Init(argc, argv));
+#else
+  SPIHost spi(nullptr);
+#endif
+
   if (!spi.Connect(device, options)) {
     fprintf(stderr, "Couldn't connect to SPI bus %s (change with -D)\n", device);
     return 1;
@@ -233,6 +240,7 @@ int main(int argc, char *argv[]) {
 
     case 'W':
       // Send previously read segment.
+      fprintf(stderr, "Sending %d steps\n", segment.count_steps);
       SendSegment(segment, &protocol);
       break;
 
