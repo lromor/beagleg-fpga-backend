@@ -16,13 +16,13 @@ module segment_step_generator #(
   } state_e;
 
   // Position of the stepper motor, updated with each step sample clk.
-  // This is a 16.16 fixed point value, so the actual position is at
-  // 31:16.
+  // This is adding up the fractional part, dropping bits overflow on the
+  // left.
   logic [31:0] position_accumulator;
 
   // The step binary output needs to go through one full cycle for each one
   // step update, so we look at the position one right to it.
-  assign step_out = position_accumulator[15];
+  assign step_out = position_accumulator[31];
 
   state_e state;
   assign is_busy = (state == STATE_MOVEMENT);

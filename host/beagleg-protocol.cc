@@ -1,11 +1,12 @@
 
 #include "spi.h"
 
-#include <unistd.h>
-#include <termios.h>
+#include <assert.h>
+#include <getopt.h>
 #include <stdio.h>
 #include <string.h>
-#include <getopt.h>
+#include <termios.h>
+#include <unistd.h>
 
 #include <algorithm>
 
@@ -22,8 +23,8 @@
 //   ../beagleg-pkg.sv  motion_segment_t
 namespace beagleg {
 struct MotionSegment {
-  uint32_t sample_count;
   uint32_t delta_distance_per_sample;
+  uint32_t sample_count;
 };
 
 struct QueueStatus {
@@ -172,18 +173,25 @@ static void ReadSegment(TerminalInput *terminal, beagleg::MotionSegment *segment
     }
   }
 
-  // Fixed point calculation
-  distance <<= 16;
-  segment->delta_distance_per_sample = (distance / segment->sample_count);
-  const double delta_distance = segment->delta_distance_per_sample / 65535.0;
-  printf("Duration %d (0x%08x) - delta-distance %.6f (0x%x.%04x)"
-         "- final distance (0x%x.%04x)\n",
+  uint64_t hires_distance = distance;
+  hires_distance <<= 32;
+  hires_distance /= segment->sample_count;
+  assert(hires_distance < 0xffffffff);  // should've been caught with data_valid
+  segment->delta_distance_per_sample = hires_distance;
+
+  // Multiply back to see the error
+  uint64_t final_distance = hires_distance;
+  final_distance *= segment->sample_count;
+
+  const double delta_distance = 1.0 * segment->delta_distance_per_sample
+    / ((1L<<32)-1);
+  printf("Duration %d (0x%08x) samples - delta-distance %.6f (0x%08x)"
+         "- final distance %.6f (0x%lx.%08lx)\n",
          segment->sample_count, segment->sample_count,
          delta_distance,
-         segment->delta_distance_per_sample >> 16,
-         segment->delta_distance_per_sample & 0xffff,
-         (segment->delta_distance_per_sample * segment->sample_count) >> 16,
-         (segment->delta_distance_per_sample * segment->sample_count) & 0xffff);
+         segment->delta_distance_per_sample,
+         delta_distance * segment->sample_count,
+         final_distance >> 32, final_distance & 0xffffffff);
 }
 
 static void SendSegment(const beagleg::MotionSegment &segment, BeagleGSPIProtocol *protocol) {
