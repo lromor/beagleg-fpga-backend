@@ -2,9 +2,9 @@ PCF?=tinyfpga-bx.pcf
 PNRFLAGS?=--lp8k --package cm81
 
 TARGET=beagleg-fpga-backend
-SOURCES=beagleg-pkg.sv fifo.sv spi-secondary.sv segment-step-generator.sv top.sv
+MANUAL_SOURCES=beagleg-pkg.sv fifo.sv spi-secondary.sv segment-step-generator.sv top.sv
 XLS_SOURCES=xls/cubic-bezier.sv
-SOURCES+=$(XLS_SOURCES)
+SOURCES=$(MANUAL_SOURCES) $(XLS_SOURCES)
 
 SURELOG?=surelog
 
@@ -37,10 +37,10 @@ flash: $(TARGET).bit
 
 # needs https://github.com/google/verible
 # (a somewhat recent version, as the binary name changed)
-format: $(SOURCES)
+format: $(MANUAL_SOURCES)
 	verible-verilog-format --inplace $^
 
-lint: $(SOURCES)
+lint: $(MANUAL_SOURCES)
 	verible-verilog-lint --rules_config_search $^
 
 # test-run with surelog to see if there are more error messages.
