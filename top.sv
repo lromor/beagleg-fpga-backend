@@ -9,13 +9,13 @@ module top (
     input  logic spi_cs,
     output logic spi_miso,
     output logic p1,
-    output logic p2,
-    output logic p3,
-    output logic p4,
-    output logic p5,
-    output logic p6,
-    output logic p7,
-    output logic p8
+    output logic p2
+    //output logic p3,
+    //output logic p4,
+    //output logic p5,
+    //output logic p6,
+    //output logic p7,
+    //output logic p8
 );
   localparam integer FifoWordSize = 8;
   // TODO: how can we assert that bits % FifoWordSize == 0 ?
@@ -50,8 +50,8 @@ module top (
   assign spi_secondary_data_w = (state == STATE_IDLE) ? empty_slots : 8'b00000000;
   assign fifo_write_en = (state == STATE_RECEIVE_SEGMENTS) ? spi_main_data_ready_w : 0;
 
-  wire [7:0] debug = {p8, p7, p6, p5, p4, p3, p2, p1};
-  assign debug = spi_secondary_data_w;
+  //wire [7:1] debug = {p8, p7, p6, p5, p4, p3, p2, p1};
+  //assign debug = spi_secondary_data_w;
 
   // Cyan: empty.
   // Green when fifo has plenty free.
@@ -96,13 +96,19 @@ module top (
       .data_out(fifo_step_transfer)
   );
 
-  segment_step_generator step_gen (
+  segment_step_generator #(
+      .PrescaleBits(3)
+  ) step_gen (
       .clk           (clk),
       .data_available(~fifo_empty_w),
       .data_request  (request_read),
       .data          (fifo_step_transfer),
-      .step_out      (system_led)
+      .step_out      (p1)
   );
+
+  // Debug output
+  assign system_led = p1;
+  assign p2 = ~fifo_empty_w;  // == data available
 
   // The first byte decides what we're going to do.
   always_ff @(posedge clk) begin
@@ -116,9 +122,11 @@ module top (
             default: state <= STATE_IDLE;
           endcase  // case (spi_main_data_w)
         end
+
         STATE_RECEIVE_SEGMENTS: begin
           // Feeding to fifo do to fifo_write_en. Do nothing otherwise.
         end
+
         default: state <= STATE_IDLE;  // Do nothing
       endcase
 
