@@ -44,11 +44,14 @@ lint: $(MANUAL_SOURCES)
 	verible-verilog-lint --rules_config_search $^
 
 # test-run with surelog to see if there are more error messages.
-surelog: $(SOURCES)
-	$(SURELOG) -parse -sv $^
+slpp_all/surelog.uhdm: $(MANUAL_SOURCES)
+	$(SURELOG) -parse -elabuhdm -sv $^
+
+uhdm-dump: slpp_all/surelog.uhdm
+	uhdm-dump $^
 
 clean:
-	rm -rf $(TARGET).dfu $(TARGET).bit $(TARGET).asc $(TARGET).json
+	rm -rf $(TARGET).dfu $(TARGET).bit $(TARGET).asc $(TARGET).json slpp_all/*
 
 verify-formal:
 	sby -t -f fifo.sby
