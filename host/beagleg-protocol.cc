@@ -7,11 +7,9 @@
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
+#include <inttypes.h>
 
 #include <algorithm>
-
-// Instead of SPI over the wire, send to Verilator simulation.
-#define USE_SIMULATION 1
 
 #if USE_SIMULATION
 #  include "../sim/hsg-sim.h"
@@ -107,7 +105,7 @@ public:
   // Attempts to send motion segments. Only sends amount possible.
   // Returns number of segments sent.
   int SendMotionSegments(const beagleg::MotionSegment *segments, int count) {
-    fprintf(stderr, "Writing first byte to read free slots, and but keep CS low to continue transaction...\n");
+    fprintf(stderr, "Writing first byte to read free slots, but keep CS low to continue transaction...\n");
     const char command = CMD_WRITE_FIFO;
     uint8_t free_slots;
     if (!spi_channel_->TransferBuffer(&command, &free_slots, 1, false))
@@ -173,10 +171,11 @@ static void ReadSegment(TerminalInput *terminal, beagleg::MotionSegment *segment
     }
   }
 
+  const uint32_t kMaxFraction = 0xffffffff;
   uint64_t hires_distance = distance;
   hires_distance <<= 32;
   hires_distance /= segment->sample_count;
-  assert(hires_distance < 0xffffffff);  // should've been caught with data_valid
+  assert(hires_distance < kMaxFraction);  // should've been caught with data_valid
   segment->delta_distance_per_sample = hires_distance;
 
   // Multiply back to see the error
@@ -184,9 +183,9 @@ static void ReadSegment(TerminalInput *terminal, beagleg::MotionSegment *segment
   final_distance *= segment->sample_count;
 
   const double delta_distance = 1.0 * segment->delta_distance_per_sample
-    / ((1L<<32)-1);
+    / kMaxFraction;
   printf("Duration %d (0x%08x) samples - delta-distance %.6f (0x%08x)"
-         "- final distance %.6f (0x%lx.%08lx)\n",
+         "- final distance %.6f (0x%" PRIx64 ".%08" PRIx64 ")\n",
          segment->sample_count, segment->sample_count,
          delta_distance,
          segment->delta_distance_per_sample,
@@ -224,7 +223,7 @@ int main(int argc, char *argv[]) {
 #if USE_SIMULATION
   SPIHost spi(StepGeneratorModuleSim::Init(argc, argv));
 #else
-  SPIHost spi(nullptr);
+  SPIHost spi;
 #endif
 
   if (!spi.Connect(device, options)) {

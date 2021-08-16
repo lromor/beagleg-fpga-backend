@@ -17,9 +17,14 @@ public:
     bool verbose = false;
   };
 
+#if USE_SIMULATION
   SPIHost(StepGeneratorModuleSim *optional_simulated = nullptr)
-    : fd_(-1), spi_sim_(optional_simulated) {
-  }
+    : fd_(-1), spi_sim_(optional_simulated) { }
+#else
+  SPIHost() : fd_(-1) { }
+#endif
+
+  SPIHost(const SPIHost&) = delete;
   ~SPIHost();
 
   // Connect to given device, e.g. "/dev/spidev0.0".
@@ -34,7 +39,9 @@ public:
 private:
   int fd_;
   struct Options options_;
+#if USE_SIMULATION
   StepGeneratorModuleSim *const spi_sim_;
+#endif
 };
 
 #endif  // SPI_HOST_H

@@ -10,7 +10,9 @@
 
 #include <algorithm>
 
-#include "../sim/hsg-sim.h"
+#if USE_SIMULATION
+#  include "../sim/hsg-sim.h"
+#endif
 
 // Report io-error, return false.
 static bool io_problem(const char *msg) {
@@ -45,7 +47,9 @@ SPIHost::~SPIHost() { close(fd_); }
 
 bool SPIHost::Connect(const char *device, const Options &set_options) {
   options_ = set_options;
+#if USE_SIMULATION
   if (spi_sim_) return true;
+#endif
 
   if (fd_ >= 0)
     close(fd_);  // Was already open.
@@ -83,9 +87,12 @@ bool SPIHost::Connect(const char *device, const Options &set_options) {
 
 bool SPIHost::TransferBuffer(const void *send, void *receive, size_t len,
                              bool is_last_in_transaction) {
+#if USE_SIMULATION
   if (spi_sim_) {
     spi_sim_->SendReceive(send, receive, len, is_last_in_transaction);
-  } else {
+  } else
+#endif
+  {
     struct spi_ioc_transfer tr = {};
     tr.tx_buf = (unsigned long)send;
     tr.rx_buf = (unsigned long)receive;
