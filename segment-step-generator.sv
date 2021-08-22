@@ -18,14 +18,17 @@ module segment_step_generator #(
   // Position of the stepper motor, updated with each step sample clk.
   // This is adding up the fractional part, dropping bits overflow on the
   // left.
-  logic [31:0] position_accumulator;
+  logic [63:0] position_accumulator;
 
   // The step binary output needs to go through one full cycle for each one
   // step update, so we look at the position one right to it.
   assign step_out = position_accumulator[31];
 
   state_e state;
-  assign is_busy = (state == STATE_MOVEMENT);
+  assign is_busy  = (state == STATE_MOVEMENT);
+
+  // Mostly for debug.
+  assign in_accel = current.current_speed < current.target_speed;
 
   initial begin
     state = STATE_IDLE;
@@ -44,9 +47,15 @@ module segment_step_generator #(
       data_request <= 1'b1;
       state <= STATE_MOVEMENT;
     end else if (state == STATE_MOVEMENT) begin
-      position_accumulator <= position_accumulator + current.delta_distance_per_sample;
-      current.sample_count <= current.sample_count - 1;
-      if (current.sample_count == 1) begin
+      // TODO: these things are always off-by-one as the increments are only
+      // visible after we clock is finished.
+      // What is a common way to properly sequence that ?
+      if (current.current_speed < current.target_speed)
+        current.current_speed <= current.current_speed + current.current_accel;
+
+      position_accumulator <= position_accumulator + current.current_speed;
+
+      if (position_accumulator[63:32] >= current.target_steps) begin
         position_accumulator <= 0;
         state <= STATE_IDLE;
       end

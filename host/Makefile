@@ -1,6 +1,6 @@
 # If simulation is switched on, beagleg-protocol doesn't actually talk to
 # an SPI bus but to the Verilator-simulated backend.
-USE_SIMULATION=1
+USE_SIMULATION?=1
 
 CXXFLAGS=-Wall -W -Wextra -I../sim -I/usr/local/share/verilator/include -std=c++17
 

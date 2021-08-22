@@ -2,14 +2,22 @@
 package beagleg_pkg;
   // TODO: make fixed point value a union maybe ?
 
-  // First step: distance per sample, i.e. constant speed.
+  typedef logic [31:0] uint32_t;
+
+  // struct is reversed to c-struct. TODO: use streaming operator to decode ?
   typedef struct packed {
-    logic [31:0] sample_count;     // how many samples we run
-    logic [31:0] delta_distance_per_sample;  // as 16.16 unsigned fixed point
+    //uint32_t jerk;
+    //uint32_t target_accel;
+    uint32_t current_accel;
+    uint32_t target_speed;
+    uint32_t current_speed;  // speed is delta steps per sample
+    uint32_t target_steps;   // target step count.
   } motion_segment_t;
 
   // Yosys not supported yet: $bits() yet
-  parameter integer MotionSegmentBits = 64;  // $bits(motion_segment_t);
+  parameter integer MotionSegmentBits = 4 * 32;  // $bits(motion_segment_t);
+
+  parameter integer FifoDepth = 8;
 
   // Must match enum in beagleg-protocol.cc
   typedef enum {

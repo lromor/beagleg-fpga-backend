@@ -21,8 +21,12 @@
 //   ../beagleg-pkg.sv  motion_segment_t
 namespace beagleg {
 struct MotionSegment {
-  uint32_t delta_distance_per_sample;
-  uint32_t sample_count;
+  uint32_t target_steps;     // Total steps to be generated
+  uint32_t current_speed;
+  uint32_t target_speed;
+  uint32_t current_accel;    // If we don't have jerk, needs to be target_accel
+  //uint32_t target_accel;
+  //uint32_t jerk;
 };
 
 struct QueueStatus {
@@ -31,6 +35,13 @@ struct QueueStatus {
 };
 }  // namespace beagleg
 
+
+static uint32_t doubleToIntFraction(double v) {
+  assert(v < 1.0);
+  uint64_t uint_val = 0x1'00'00'00'00;
+  uint_val *= v;
+  return uint_val;
+}
 
 // These numbers need to match with constants in the FPGA impl.
 
@@ -139,17 +150,22 @@ static void print_status(const beagleg::QueueStatus &status) {
   printf("Status: counter:%d; index:%d\n", status.counter, status.index);
 }
 
-static void ReadNumber(TerminalInput *terminal, const char *prompt, uint32_t *out) {
+static void ReadNumber(TerminalInput *terminal, const char *prompt,
+                       uint32_t *out, uint32_t *prefix_zero = nullptr) {
   printf("%s", prompt);
   fflush(stdout);
   char k;
 
   // For now, just integer
   *out = 0;
+  if (prefix_zero) *prefix_zero = 0;
+  bool only_zero_so_far = true;
   while ((k = terminal->read_char()) != '\n') {
     if (k >= '0' && k <= '9') {
       write(STDOUT_FILENO, &k, 1);
       *out = *out * 10 + (k - '0');
+      only_zero_so_far &= (k == '0');
+      if (prefix_zero && only_zero_so_far) ++*prefix_zero;
     } else {
       k = '\007';  // beep.
       write(STDOUT_FILENO, &k, 1);
@@ -158,39 +174,38 @@ static void ReadNumber(TerminalInput *terminal, const char *prompt, uint32_t *ou
   printf(" \u2713\n");  // checkmark.
 }
 
-static void ReadSegment(TerminalInput *terminal, beagleg::MotionSegment *segment) {
-  uint32_t distance;
-  for (bool data_valid = false; !data_valid; /**/) {
-    ReadNumber(terminal, "Duration in samples:  ", &segment->sample_count);
-    ReadNumber(terminal, "Total Steps moved: ", &distance);
-    data_valid = (segment->sample_count > 0
-                  && distance < segment->sample_count / 2);
-    if (!data_valid) {
-      fprintf(stderr, "This would result in too fast step frequency. "
-              "Use less steps or longer duration.\nRetry: ");
-    }
+static void ReadFraction(TerminalInput *terminal, const char *prompt,
+                         double *out) {
+  uint32_t digits, prefix_zero;
+  ReadNumber(terminal, prompt, &digits, &prefix_zero);
+  char reassembled[32];
+  if (prefix_zero > 0) {
+    snprintf(reassembled, sizeof(reassembled), "0.%0*d%u",
+             prefix_zero, 0, digits);
+  } else {
+    snprintf(reassembled, sizeof(reassembled), "0.%u\n", digits);
   }
+  *out = strtod(reassembled, nullptr);
+}
 
-  const uint32_t kMaxFraction = 0xffffffff;
-  uint64_t hires_distance = distance;
-  hires_distance <<= 32;
-  hires_distance /= segment->sample_count;
-  assert(hires_distance < kMaxFraction);  // should've been caught with data_valid
-  segment->delta_distance_per_sample = hires_distance;
+static void ReadSegment(TerminalInput *terminal, beagleg::MotionSegment *segment) {
 
-  // Multiply back to see the error
-  uint64_t final_distance = hires_distance;
-  final_distance *= segment->sample_count;
+  ReadNumber(terminal, "Output steps to move: ", &segment->target_steps);
+  double c_speed, t_speed;
+  ReadFraction(terminal, "Current Speed (steps per sample): 0.", &c_speed);
+  segment->current_speed = doubleToIntFraction(c_speed);
+  ReadFraction(terminal, "Target Speed                    : 0.", &t_speed);
+  segment->target_speed = doubleToIntFraction(t_speed);
 
-  const double delta_distance = 1.0 * segment->delta_distance_per_sample
-    / kMaxFraction;
-  printf("Duration %d (0x%08x) samples - delta-distance %.6f (0x%08x)"
-         "- final distance %.6f (0x%" PRIx64 ".%08" PRIx64 ")\n",
-         segment->sample_count, segment->sample_count,
-         delta_distance,
-         segment->delta_distance_per_sample,
-         delta_distance * segment->sample_count,
-         final_distance >> 32, final_distance & 0xffffffff);
+  if (segment->current_speed != segment->target_speed) {
+    double c_accel;
+    ReadFraction(terminal, "Acceleration (steps per sample²): 0.", &c_accel);
+    // For now, we don't use jerk, so acceleration is a constant.
+    /*segment->target_accel = */segment->current_accel
+      = doubleToIntFraction(c_accel);
+    fprintf(stderr, "Taking %.1f samples to reach speed\n",
+            (t_speed - c_speed) / c_accel);
+  }
 }
 
 static void SendSegment(const beagleg::MotionSegment &segment, BeagleGSPIProtocol *protocol) {
@@ -246,9 +261,11 @@ int main(int argc, char *argv[]) {
 
   static constexpr char nothing_to_do[] = "¯\\_(ツ)_/¯";
 
-  beagleg::MotionSegment segment;
-  segment.sample_count = 100;
-  segment.delta_distance_per_sample = (10 << 16) / 100;  // 10 steps.
+  beagleg::MotionSegment segment = {};
+  segment.target_steps = 100;
+  segment.current_speed = doubleToIntFraction(0.0);
+  segment.target_speed = doubleToIntFraction(0.2);
+  segment.current_accel = doubleToIntFraction(0.0005);
   beagleg::QueueStatus status;
   BeagleGSPIProtocol protocol(&spi);
   TerminalInput terminal;

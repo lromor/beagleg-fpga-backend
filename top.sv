@@ -20,7 +20,7 @@ module top (
   localparam integer FifoWordSize = 8;
   // TODO: how can we assert that bits % FifoWordSize == 0 ?
   localparam integer FifoRecordWords = beagleg_pkg::MotionSegmentBits / FifoWordSize;
-  localparam integer FifoDepth = 16;
+  localparam integer FifoDepth = beagleg_pkg::FifoDepth;
 
   typedef enum {
     STATE_IDLE,
