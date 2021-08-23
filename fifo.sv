@@ -40,9 +40,10 @@ module fifo #(
 
   // The wires of the read/write positions are a bit less because we use
   // it as indexes for the storage and they need the proper modular arithmetic.
-  wire [StorageSize-1:0] write_pos_idx_w = write_pos_r[StoragePosSize-1:0];
-  wire [StorageSize-1:0] read_pos_idx_w = read_pos_r[StoragePosSize-1:0];
+  wire [StoragePosSize-1:0] write_pos_idx_w = write_pos_r[StoragePosSize-1:0];
+  wire [StoragePosSize-1:0] read_pos_idx_w = read_pos_r[StoragePosSize-1:0];
 
+  // TODO: this requires that our words are sizes of power of two.
   assign empty = (size >> RecordPosSize) == 0;
   assign full  = (size == StorageSize);
   wire do_write_w = write_en && !full;
@@ -60,7 +61,7 @@ module fifo #(
   // Write stuff
   always @(posedge clk) begin
     if (do_write_w) begin
-      // We read one byte at a time; increment by that.
+      // We read one word (typically: byte) at a time; increment by that.
       write_pos_r <= write_pos_r + 1;
       // Update the storage with the input.
       storage[write_pos_idx_w] <= data_in;

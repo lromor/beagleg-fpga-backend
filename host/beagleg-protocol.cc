@@ -25,8 +25,9 @@ struct MotionSegment {
   uint32_t current_speed;
   uint32_t target_speed;
   uint32_t current_accel;    // If we don't have jerk, needs to be target_accel
-  //uint32_t target_accel;
-  //uint32_t jerk;
+  uint32_t target_accel;
+  uint32_t jerk;
+  uint32_t dummy1, dummy2;   // fifo needs powers of two bytes.
 };
 
 struct QueueStatus {
@@ -130,8 +131,12 @@ public:
     const int segment_tx_count = std::min((int)free_slots, count);
     const int segment_byte_len = segment_tx_count * sizeof(beagleg::MotionSegment);
     char rx_buffer[segment_byte_len];   // Let's see what it sends back
-    fprintf(stderr, "Sending actual data; %d elements = %d bytes\n",
-            segment_tx_count, segment_byte_len);
+    const beagleg::MotionSegment &f = segments[0];
+    fprintf(stderr, "Sending actual data; %d elements = %d bytes "
+            "[first: %08x %08x %08x %08x %08x %08x]\n",
+            segment_tx_count, segment_byte_len,
+            f.target_steps, f.current_speed, f.target_speed,
+            f.current_accel, f.target_accel, f.jerk);
     if (!spi_channel_->TransferBuffer(segments, rx_buffer, segment_byte_len))
       return -1;
     return segment_tx_count;
@@ -266,6 +271,9 @@ int main(int argc, char *argv[]) {
   segment.current_speed = doubleToIntFraction(0.0);
   segment.target_speed = doubleToIntFraction(0.2);
   segment.current_accel = doubleToIntFraction(0.0005);
+  // These are not used yet, just to check that data arrives properly.
+  segment.jerk = 0x12345678;
+  segment.target_accel = 0x87654321;
   beagleg::QueueStatus status;
   BeagleGSPIProtocol protocol(&spi);
   TerminalInput terminal;

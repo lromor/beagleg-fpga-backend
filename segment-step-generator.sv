@@ -43,6 +43,8 @@ module segment_step_generator #(
   always_ff @(posedge step_sampling_clk) begin
     if (state == STATE_IDLE && data_available) begin
       current <= data;
+      $display("sim: %08x %08x %08x %08x %08x %08x", data.target_steps, data.current_speed,
+               data.target_speed, data.current_accel, data.target_accel, data.jerk);
       position_accumulator <= 0;
       data_request <= 1'b1;
       state <= STATE_MOVEMENT;
