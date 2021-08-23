@@ -10,10 +10,10 @@ module spi_secondary #(
     input logic clk,
 
     // External interface
-    input logic sck,  // clock
-    input logic in_bit,  // main out secondary in bit
+    input  logic sck,      // clock
+    input  logic in_bit,   // main out secondary in bit
     output logic out_bit,  // main in secondary out bit
-    input logic cs,  // channel select
+    input  logic cs,       // chip select
 
     // Bus interface
     output logic word_ready,  // New word received and setting the output with to_send
@@ -27,9 +27,10 @@ module spi_secondary #(
   logic [WordBitSize:0] counter = 0;
 
 
-  logic [2:0] sck_buffer = 2'b00;
-  wire rising = (sck_buffer[2:1] == 2'b01);  // now we can detect SCK rising edges
-  wire falling = (sck_buffer[2:1] == 2'b10);
+  // We're sampling serial clock; Check if the sck edge changed between clk
+  logic [1:0] sck_edge_detect = 2'b00;
+  wire rising = (sck_edge_detect == 2'b01);
+  wire falling = (sck_edge_detect == 2'b10);
 
   assign word_ready = counter[WordBitSize];
 
@@ -58,8 +59,7 @@ module spi_secondary #(
       counter <= counter + 1;
     end
 
-    // Update state
-    sck_buffer <= {sck_buffer[1:0], sck};
+    sck_edge_detect <= {sck_edge_detect[0], sck};
 
     // Overflow! We stored a full word
     if (word_ready == 1'b1) begin
