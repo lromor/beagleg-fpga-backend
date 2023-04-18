@@ -35,3 +35,7 @@
 *.json
 *.bit
 *.dfu
+
+slpp_all/
+.envrc
+
