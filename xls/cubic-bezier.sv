@@ -1,17 +1,17 @@
-module __cubic_bezier_private__main(
-  input wire clk,
-  input wire [16:0] x,
-  input wire [22:0] a,
-  input wire [22:0] b,
-  input wire [22:0] c,
-  output wire [73:0] out
+module __cubic_bezier_private__main (
+    input wire clk,
+    input wire [16:0] x,
+    input wire [22:0] a,
+    input wire [22:0] b,
+    input wire [22:0] c,
+    output wire [73:0] out
 );
   // lint_off SIGNED_TYPE
   // lint_off MULTIPLY
-  function automatic [33:0] smul34b_17b_x_17b (input reg [16:0] lhs, input reg [16:0] rhs);
-    reg signed  [16:0] signed_lhs;
-    reg signed  [16:0] signed_rhs;
-    reg signed  [33:0] signed_result;
+  function automatic [33:0] smul34b_17b_x_17b(input reg [16:0] lhs, input reg [16:0] rhs);
+    reg signed [16:0] signed_lhs;
+    reg signed [16:0] signed_rhs;
+    reg signed [33:0] signed_result;
     begin
       signed_lhs = $signed(lhs);
       signed_rhs = $signed(rhs);
@@ -23,10 +23,10 @@ module __cubic_bezier_private__main(
   // lint_on SIGNED_TYPE
   // lint_off SIGNED_TYPE
   // lint_off MULTIPLY
-  function automatic [56:0] smul57b_23b_x_34b (input reg [22:0] lhs, input reg [33:0] rhs);
-    reg signed  [22:0] signed_lhs;
-    reg signed  [33:0] signed_rhs;
-    reg signed  [56:0] signed_result;
+  function automatic [56:0] smul57b_23b_x_34b(input reg [22:0] lhs, input reg [33:0] rhs);
+    reg signed [22:0] signed_lhs;
+    reg signed [33:0] signed_rhs;
+    reg signed [56:0] signed_result;
     begin
       signed_lhs = $signed(lhs);
       signed_rhs = $signed(rhs);
@@ -38,10 +38,10 @@ module __cubic_bezier_private__main(
   // lint_on SIGNED_TYPE
   // lint_off SIGNED_TYPE
   // lint_off MULTIPLY
-  function automatic [39:0] smul40b_23b_x_17b (input reg [22:0] lhs, input reg [16:0] rhs);
-    reg signed  [22:0] signed_lhs;
-    reg signed  [16:0] signed_rhs;
-    reg signed  [39:0] signed_result;
+  function automatic [39:0] smul40b_23b_x_17b(input reg [22:0] lhs, input reg [16:0] rhs);
+    reg signed [22:0] signed_lhs;
+    reg signed [16:0] signed_rhs;
+    reg signed [39:0] signed_result;
     begin
       signed_lhs = $signed(lhs);
       signed_rhs = $signed(rhs);
@@ -53,10 +53,10 @@ module __cubic_bezier_private__main(
   // lint_on SIGNED_TYPE
   // lint_off SIGNED_TYPE
   // lint_off MULTIPLY
-  function automatic [50:0] smul51b_34b_x_17b (input reg [33:0] lhs, input reg [16:0] rhs);
-    reg signed  [33:0] signed_lhs;
-    reg signed  [16:0] signed_rhs;
-    reg signed  [50:0] signed_result;
+  function automatic [50:0] smul51b_34b_x_17b(input reg [33:0] lhs, input reg [16:0] rhs);
+    reg signed [33:0] signed_lhs;
+    reg signed [16:0] signed_rhs;
+    reg signed [50:0] signed_result;
     begin
       signed_lhs = $signed(lhs);
       signed_rhs = $signed(rhs);
@@ -68,10 +68,10 @@ module __cubic_bezier_private__main(
   // lint_on SIGNED_TYPE
   // lint_off SIGNED_TYPE
   // lint_off MULTIPLY
-  function automatic [73:0] smul74b_23b_x_51b (input reg [22:0] lhs, input reg [50:0] rhs);
-    reg signed  [22:0] signed_lhs;
-    reg signed  [50:0] signed_rhs;
-    reg signed  [73:0] signed_result;
+  function automatic [73:0] smul74b_23b_x_51b(input reg [22:0] lhs, input reg [50:0] rhs);
+    reg signed [22:0] signed_lhs;
+    reg signed [50:0] signed_rhs;
+    reg signed [73:0] signed_result;
     begin
       signed_lhs = $signed(lhs);
       signed_rhs = $signed(rhs);
@@ -89,7 +89,7 @@ module __cubic_bezier_private__main(
   reg [22:0] p0_a;
   reg [22:0] p0_b;
   reg [22:0] p0_c;
-  always_ff @ (posedge clk) begin
+  always_ff @(posedge clk) begin
     p0_x <= x;
     p0_a <= a;
     p0_b <= b;
@@ -118,7 +118,7 @@ module __cubic_bezier_private__main(
 
   // Registers for pipe stage 1:
   reg [73:0] p1_concat_98;
-  always_ff @ (posedge clk) begin
+  always_ff @(posedge clk) begin
     p1_concat_98 <= p1_concat_98_comb;
   end
   assign out = p1_concat_98;
