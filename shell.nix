@@ -10,7 +10,7 @@ pkgs.mkShell {
       yosys
       surelog
       uhdm
-      yosys-symbiflow.systemverilog
+      yosys-synlig
 
       nextpnr
       icestorm
