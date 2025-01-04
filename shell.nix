@@ -3,7 +3,24 @@
 # in this repo, and have all dependencies ready in the new shell.
 
 { pkgs ? import <nixpkgs> {} }:
-pkgs.mkShell {
+let
+  xls = pkgs.stdenv.mkDerivation rec {
+    name = "xls";
+    version = "v0.0.0-6661-g9dfd0b42e";
+    src = builtins.fetchurl {
+      url = "https://github.com/google/xls/releases/download/v0.0.0-6661-g9dfd0b42e/${name}-${version}-linux-x64.tar.gz";
+    };
+    installPhase = ''
+        mkdir -p $out/bin
+        for f in *_main ; do cp $f $out/bin/$(echo xls-$f | sed 's/_main//' | sed 's/_/-/'); done
+        cp -r xls/ $out/bin
+    '';
+
+    outputHashAlgo = "sha256";
+    outputHashMode = "recursive";
+    outputHash = "sha256-rvqmX46BXtJuPg22ML4GYUqfmzvPBTVIQEpDk3UUh2Q=";
+  };
+in pkgs.mkShell {
   buildInputs = with pkgs;
     [
       valgrind
@@ -11,6 +28,7 @@ pkgs.mkShell {
       surelog
       uhdm
       yosys-synlig
+      xls
 
       nextpnr
       icestorm

@@ -1,3 +1,7 @@
+# Others
+.envrc
+.direnv
+
 # Prerequisites
 *.d
 
