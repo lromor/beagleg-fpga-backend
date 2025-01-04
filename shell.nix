@@ -12,13 +12,13 @@ let
     };
     installPhase = ''
         mkdir -p $out/bin
-        for f in *_main ; do cp $f $out/bin/$(echo xls-$f | sed 's/_main//' | sed 's/_/-/'); done
+        for f in *_main ; do cp $f $out/bin/$(echo xls-$f | sed 's/_main//' | sed 's/_/-/g'); done
         cp -r xls/ $out/bin
     '';
 
     outputHashAlgo = "sha256";
     outputHashMode = "recursive";
-    outputHash = "sha256-rvqmX46BXtJuPg22ML4GYUqfmzvPBTVIQEpDk3UUh2Q=";
+    outputHash = "sha256-NQ8eQbhJ58XiLKY4rArB0yZr3rJhLBkbiuQ+imI9KXA=";
   };
 in pkgs.mkShell {
   buildInputs = with pkgs;
